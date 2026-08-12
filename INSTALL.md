@@ -4,7 +4,17 @@
 
 ---
 
-## Claude Code（一键安装）
+## Claude Code
+
+### npx（最简单，推荐）
+
+```bash
+npx auto-selector-skill
+```
+
+一条命令，自动完成：下载 → 复制到插件目录 → 注册 → 提示重启。
+
+### 一键安装脚本
 
 **macOS / Linux / WSL / Git Bash**
 

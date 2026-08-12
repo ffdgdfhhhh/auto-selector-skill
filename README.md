@@ -42,26 +42,15 @@ Auto Selector 扫描本地所有 skill/plugin
 
 ## 安装
 
+一条命令搞定（需要 Node.js 18+）：
+
 ```bash
-git clone https://github.com/ffdgdfhhhh/auto-selector-skill.git
-cp -r auto-selector-skill ~/.claude/plugins/cache/auto-selector-skill/auto-selector-skill/latest
+npx auto-selector-skill
 ```
 
-然后在 `~/.claude/plugins/installed_plugins.json` 的 `plugins` 对象中添加：
+重启 Claude Code 即可。
 
-```json
-"auto-selector-skill@auto-selector-skill": [
-  {
-    "scope": "user",
-    "installPath": "<你的home目录>/.claude/plugins/cache/auto-selector-skill/auto-selector-skill/latest",
-    "version": "latest",
-    "installedAt": "2026-01-01T00:00:00.000Z",
-    "lastUpdated": "2026-01-01T00:00:00.000Z"
-  }
-]
-```
-
-重启 Claude Code 即可生效。
+其他平台和安装方式见 [INSTALL.md](INSTALL.md)。
 
 ---
 

@@ -1,6 +1,45 @@
 {
   "name": "auto-selector-skill",
   "version": "1.0.0",
-  "description": "Always-on skill & plugin selector for Claude Code",
-  "license": "MIT"
+  "description": "Always-on skill & plugin selector for AI coding agents. Scans installed skills/plugins, analyzes user tasks, selects the best match, asks for confirmation before invoking.",
+  "license": "MIT",
+  "author": "ffdgdfhhhh",
+  "homepage": "https://github.com/ffdgdfhhhh/auto-selector-skill",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ffdgdfhhhh/auto-selector-skill.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ffdgdfhhhh/auto-selector-skill/issues"
+  },
+  "bin": {
+    "auto-selector-skill": "./bin/install.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "claude-code",
+    "plugin",
+    "skill",
+    "router",
+    "selector",
+    "codex",
+    "gemini-cli",
+    "cursor",
+    "ai-agent"
+  ],
+  "files": [
+    "bin/",
+    "src/",
+    "plugins/",
+    ".claude-plugin/",
+    ".github/",
+    ".codex/",
+    "AGENTS.md",
+    "GEMINI.md",
+    "gemini-extension.json",
+    "README.md",
+    "LICENSE"
+  ]
 }
