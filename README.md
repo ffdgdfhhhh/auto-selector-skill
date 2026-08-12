@@ -34,9 +34,10 @@ Auto Selector 扫描本地所有 skill/plugin
 | **动态扫描** | 每次对话自动读取系统 listing，装了新 skill 立刻可用 |
 | **智能分析** | 模型看完所有候选 skill 的描述后自己判断，不是关键词匹配 |
 | **用户确认** | 选完后问你，不强制调用，取消就回退到默认回答 |
+| **黑名单** | 可以排除特定 skill，永久生效 |
 | **链式路由** | 做计划 → 写代码 → 测试，自动串联整个流程 |
 | **学习能力** | 你纠正一次，本次对话内记住 |
-| **开关控制** | `stop auto-selector` 关闭 / `start auto-selector` 开启 |
+| **开关控制** | `auto-selector off` 关闭 / `auto-selector on` 开启 |
 
 ---
 
@@ -74,16 +75,47 @@ npx auto-selector-skill
   ❌ 取消 → 我直接回答
 ```
 
-### 命令
+### 聊天中使用的命令
 
-| 说 | 效果 |
-|---|------|
+在 AI 对话中直接输入：
+
+| 命令 | 效果 |
+|------|------|
 | 直接说需求 | 自动分析并推荐 skill |
-| `stop auto-selector` | 本次对话关闭 |
-| `start auto-selector` | 重新开启 |
+| `auto-selector help` | 显示所有可用命令 |
+| `auto-selector on` | 开启自动选择 |
+| `auto-selector off` | 关闭自动选择 |
+| `auto-selector list` | 列出所有检测到的 skill/plugin |
+| `auto-selector skip-confirm on` | 跳过确认，匹配后自动调用 |
+| `auto-selector skip-confirm off` | 恢复确认（默认） |
+| `auto-selector blacklist add X` | 将 skill X 加入黑名单，不再自动推荐 |
+| `auto-selector blacklist remove X` | 将 skill X 从黑名单移除 |
+| `auto-selector blacklist list` | 查看当前黑名单 |
+| `auto-selector blacklist clear` | 清空黑名单 |
+| `auto-selector status` | 查看当前状态（开关、黑名单、跳过确认） |
 | `skills` / `路由表` | 查看所有本地可用的 skill/plugin |
-| `/caveman` 等明确指定 | 跳过路由，直接调用 |
-| `直接用` / `不用问了` | 后续跳过确认，自动调用 |
+| `/caveman` 等明确指定 | 跳过路由，直接调用该 skill |
+| `直接用` / `不用问了` | 等同于 `skip-confirm on` |
+| `不要用 X` / `ignore X` | 等同于 `blacklist add X` |
+| `恢复 X` | 等同于 `blacklist remove X` |
+
+### 终端 CLI 命令
+
+```bash
+npx auto-selector-skill                        # 安装（自动检测所有平台）
+npx auto-selector-skill --help                 # 显示帮助
+npx auto-selector-skill --list                 # 列出检测到的 AI 编码助手
+npx auto-selector-skill --only claude          # 只安装到 Claude Code
+npx auto-selector-skill --only cursor          # 只安装到 Cursor
+npx auto-selector-skill --dry-run              # 预览，不写文件
+npx auto-selector-skill --uninstall            # 从所有平台卸载
+
+# 黑名单管理
+npx auto-selector-skill --blacklist-add X      # 将 skill X 加入黑名单
+npx auto-selector-skill --blacklist-remove X   # 将 skill X 从黑名单移除
+npx auto-selector-skill --blacklist-list       # 查看黑名单
+npx auto-selector-skill --blacklist-clear      # 清空黑名单
+```
 
 ---
 
@@ -159,7 +191,7 @@ A: 说一次"直接用"或"不用问了"，后续就跳过确认自动调用。
 A: 能。每次对话它都会重新扫描系统 listing，新装的 skill 立刻可用。
 
 **Q: 能不能只对某些 skill 关闭选择？**
-A: 目前不支持。你可以 `stop auto-selector` 关闭整个功能，然后手动 `/skill-name`。
+A: 可以。用黑名单功能：聊天中说 `auto-selector blacklist add <skill名>`，或终端跑 `npx auto-selector-skill --blacklist-add <skill名>`。
 
 ---
 
