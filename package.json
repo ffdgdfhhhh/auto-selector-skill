@@ -1,6 +1,6 @@
 {
   "name": "auto-selector-skill",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Always-on skill & plugin selector for AI coding agents. Scans installed skills/plugins, analyzes user tasks, selects the best match, asks for confirmation before invoking.",
   "license": "MIT",
   "author": "ffdgdfhhhh",
