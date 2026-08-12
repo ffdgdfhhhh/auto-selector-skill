@@ -1,8 +1,10 @@
 # Install Auto Selector Skill
 
-Claude Code 插件 — 会话启动时自动激活，不需要改 CLAUDE.md。
+支持 Claude Code、Codex、Gemini CLI、Cursor、Windsurf、Cline、Copilot 等所有主流 AI 编码助手。
 
-## 一键安装（推荐）
+---
+
+## Claude Code（一键安装）
 
 **macOS / Linux / WSL / Git Bash**
 
@@ -17,6 +19,62 @@ irm https://raw.githubusercontent.com/ffdgdfhhhh/auto-selector-skill/main/instal
 ```
 
 安装完成，重启 Claude Code 即可。
+
+---
+
+## Gemini CLI
+
+```bash
+gemini extensions install https://github.com/ffdgdfhhhh/auto-selector-skill
+```
+
+重启 Gemini CLI 即可。
+
+---
+
+## Codex CLI
+
+```bash
+npx skills add ffdgdfhhhh/auto-selector-skill -a codex
+```
+
+---
+
+## Cursor
+
+```bash
+npx skills add ffdgdfhhhh/auto-selector-skill -a cursor
+```
+
+---
+
+## Windsurf
+
+```bash
+npx skills add ffdgdfhhhh/auto-selector-skill -a windsurf
+```
+
+---
+
+## Cline
+
+```bash
+npx skills add ffdgdfhhhh/auto-selector-skill -a cline
+```
+
+---
+
+## GitHub Copilot
+
+```bash
+npx skills add ffdgdfhhhh/auto-selector-skill -a github-copilot
+```
+
+---
+
+## 其他平台
+
+将 `plugins/auto-selector-skill/skills/auto-selector-skill/SKILL.md` 的内容复制到你平台的规则文件中即可。
 
 ---
 

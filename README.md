@@ -1,8 +1,10 @@
 # Auto Selector Skill
 
-**Claude Code 自动选择 Skill 插件** — 装了它，你再也不用记 `/skill-name`。
+**AI 编码助手自动选择 Skill 插件** — 装了它，你再也不用记 `/skill-name`。
 
-Auto Selector Skill 在每次 Claude Code 会话启动时自动激活，扫描你本地安装的所有 skill 和 plugin，帮你找到最合适的工具来完成任务。
+支持 **Claude Code、Codex、Gemini CLI、Cursor、Windsurf、Cline、Copilot** 等所有主流 AI 编码助手。
+
+Auto Selector Skill 在每次会话启动时自动激活，扫描你本地安装的所有 skill 和 plugin，帮你找到最合适的工具来完成任务。
 
 ---
 
@@ -101,33 +103,58 @@ cp -r auto-selector-skill ~/.claude/plugins/cache/auto-selector-skill/auto-selec
 ```
 auto-selector-skill/
 ├── .claude-plugin/
-│   └── plugin.json              # 插件配置 + SessionStart 钩子声明
+│   └── plugin.json              # Claude Code 插件配置
+├── .codex/
+│   └── config.toml              # Codex 配置
 ├── .github/plugin/
 │   └── marketplace.json         # 插件市场元数据
+├── AGENTS.md                    # Codex / opencode / Cursor / Windsurf / Cline / Copilot
+├── GEMINI.md                    # Gemini CLI
+├── gemini-extension.json        # Gemini CLI 扩展配置
 ├── plugins/auto-selector-skill/skills/auto-selector-skill/
 │   └── SKILL.md                 # 路由逻辑（唯一编辑源）
 ├── src/hooks/
-│   └── selector-activate.js     # SessionStart 钩子脚本
+│   └── selector-activate.js     # Claude Code SessionStart 钩子
+├── install.sh                   # macOS/Linux 一键安装
+├── install.ps1                  # Windows 一键安装
 ├── package.json
 ├── LICENSE
+├── INSTALL.md                   # 详细安装教程
+├── CONTRIBUTING.md              # 贡献指南
+├── CHANGELOG.md                 # 版本记录
 └── README.md
 ```
 
 ---
 
+## 支持的平台
+
+| 平台 | 机制 | 自动激活 | 安装方式 |
+|------|------|---------|---------|
+| **Claude Code** | Plugin (SessionStart hook) | ✅ | `install.sh` / `install.ps1` |
+| **Gemini CLI** | Extension (GEMINI.md) | ✅ | `gemini extensions install` |
+| **Codex CLI** | AGENTS.md | ✅ | `npx skills add` |
+| **Cursor** | AGENTS.md + rules | ✅ | `npx skills add -a cursor` |
+| **Windsurf** | AGENTS.md + rules | ✅ | `npx skills add -a windsurf` |
+| **Cline** | AGENTS.md + .clinerules | ✅ | `npx skills add -a cline` |
+| **GitHub Copilot** | AGENTS.md | ✅ | `npx skills add -a github-copilot` |
+| **opencode** | AGENTS.md | ✅ | 复制到 config 目录 |
+| **其他** | SKILL.md 通用格式 | 手动 | 复制 SKILL.md 到对应目录 |
+
+---
+
 ## 工作原理
 
-Auto Selector Skill 是一个 **Claude Code 插件**（plugin），不是 skill。
+Auto Selector Skill 的核心路由逻辑在 `SKILL.md` 中，**不依赖任何特定平台的 API**，所以能跨平台工作。
 
-| | Skill | Plugin |
-|---|-------|--------|
-| 触发方式 | 被动，需要用户任务匹配 description | 主动，SessionStart 钩子自动注入 |
-| 可靠性 | 不保证每次触发 | 100% 每次会话激活 |
-| 需要改 CLAUDE.md | 是 | 否 |
+不同平台的激活机制：
 
-插件通过 `SessionStart` 钩子在会话创建时执行 `selector-activate.js`，该脚本读取 `SKILL.md` 并输出到 stdout。Claude Code 将 stdout 作为隐藏的系统上下文注入，用户看不到，但模型每次都会读到。
-
-和 caveman、ponytail 等插件用的是**同一套机制**。
+| 平台 | 怎么激活 |
+|------|---------|
+| **Claude Code** | `SessionStart` 钩子自动读取 SKILL.md 并注入系统上下文 |
+| **Gemini CLI** | `gemini-extension.json` 指向 `GEMINI.md`，`GEMINI.md` 引用 SKILL.md |
+| **Codex / Cursor / Windsurf / Cline / Copilot** | `AGENTS.md` 引用 SKILL.md，平台自动发现 |
+| **其他** | 将 SKILL.md 内容复制到平台的规则文件中 |
 
 ---
 

@@ -1,0 +1,6 @@
+{
+  "name": "auto-selector-skill",
+  "description": "Always-on skill & plugin selector. Scans installed skills/plugins, analyzes user tasks, selects the best match, asks for confirmation before invoking.",
+  "version": "1.0.0",
+  "contextFileName": "GEMINI.md"
+}
