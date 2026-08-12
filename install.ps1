@@ -27,7 +27,7 @@ if (Test-Path "$PSScriptRoot\.claude-plugin") {
     # Running as one-liner — download
     Write-Host "📥 Downloading from GitHub..." -ForegroundColor Yellow
     if (Test-Path $TempDir) { Remove-Item -Recurse -Force $TempDir }
-    git clone --depth 1 https://github.com/YOUR_USERNAME/auto-selector-skill.git $TempDir 2>$null
+    git clone --depth 1 https://github.com/ffdgdfhhhh/auto-selector-skill.git $TempDir 2>$null
     $SourceDir = $TempDir
 }
 

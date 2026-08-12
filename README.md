@@ -41,7 +41,7 @@ Auto Selector 扫描本地所有 skill/plugin
 ## 安装
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/auto-selector-skill.git
+git clone https://github.com/ffdgdfhhhh/auto-selector-skill.git
 cp -r auto-selector-skill ~/.claude/plugins/cache/auto-selector-skill/auto-selector-skill/latest
 ```
 

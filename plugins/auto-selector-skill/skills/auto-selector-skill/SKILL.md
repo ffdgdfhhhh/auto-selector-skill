@@ -111,7 +111,7 @@ When user says "skills" / "路由表" / "有什么可以用的", display all sca
 ## Installation
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/auto-selector-skill.git
+git clone https://github.com/ffdgdfhhhh/auto-selector-skill.git
 cp -r auto-selector-skill ~/.claude/plugins/cache/auto-selector-skill/auto-selector-skill/latest
 ```
 

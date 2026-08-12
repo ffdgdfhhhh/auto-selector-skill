@@ -7,13 +7,13 @@ Claude Code 插件 — 会话启动时自动激活，不需要改 CLAUDE.md。
 **macOS / Linux / WSL / Git Bash**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/auto-selector-skill/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/ffdgdfhhhh/auto-selector-skill/main/install.sh | bash
 ```
 
 **Windows (PowerShell 5.1+)**
 
 ```powershell
-irm https://raw.githubusercontent.com/YOUR_USERNAME/auto-selector-skill/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/ffdgdfhhhh/auto-selector-skill/main/install.ps1 | iex
 ```
 
 安装完成，重启 Claude Code 即可。
