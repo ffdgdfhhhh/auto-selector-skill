@@ -9,6 +9,13 @@
 
 set -e
 
+# Check Node.js is available (required for JSON handling)
+if ! command -v node &> /dev/null; then
+  echo "❌ Node.js is required but not installed."
+  echo "   Install it from https://nodejs.org/ (version 18+)"
+  exit 1
+fi
+
 REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
 PLUGIN_NAME="auto-selector-skill"
 CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
@@ -34,23 +41,26 @@ echo "📁 Copied to $CACHE_DIR"
 mkdir -p "$(dirname "$PLUGINS_JSON")"
 
 if [ ! -f "$PLUGINS_JSON" ]; then
-  # Create new file
-  cat > "$PLUGINS_JSON" << EOF
-{
-  "version": 2,
-  "plugins": {
-    "$PLUGIN_NAME@$PLUGIN_NAME": [
-      {
-        "scope": "user",
-        "installPath": "$CACHE_DIR",
-        "version": "latest",
-        "installedAt": "$(date -u +%Y-%m-%dT%H:%M:%S.000Z)",
-        "lastUpdated": "$(date -u +%Y-%m-%dT%H:%M:%S.000Z)"
+  # Create new file using node (handles paths with special chars)
+  node -e "
+    const fs = require('fs');
+    const path = require('path');
+    const pluginsDir = path.dirname('$PLUGINS_JSON');
+    fs.mkdirSync(pluginsDir, {recursive: true});
+    const data = {
+      version: 2,
+      plugins: {
+        '$PLUGIN_NAME@$PLUGIN_NAME': [{
+          scope: 'user',
+          installPath: '$CACHE_DIR',
+          version: 'latest',
+          installedAt: new Date().toISOString(),
+          lastUpdated: new Date().toISOString()
+        }]
       }
-    ]
-  }
-}
-EOF
+    };
+    fs.writeFileSync('$PLUGINS_JSON', JSON.stringify(data, null, 2) + '\n');
+  "
   echo "✅ Created installed_plugins.json"
 else
   # Check if already registered
