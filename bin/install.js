@@ -217,6 +217,11 @@ const opts = {
   list: false,
   dryRun: false,
   help: false,
+  uninstall: false,
+  blacklistAdd: null,
+  blacklistRemove: null,
+  blacklistList: false,
+  blacklistClear: false,
 };
 
 for (let i = 0; i < args.length; i++) {
@@ -224,23 +229,157 @@ for (let i = 0; i < args.length; i++) {
     case '--only': opts.only.push(args[++i]); break;
     case '--list': opts.list = true; break;
     case '--dry-run': opts.dryRun = true; break;
+    case '-u': case '--uninstall': opts.uninstall = true; break;
+    case '--blacklist-add': opts.blacklistAdd = args[++i]; break;
+    case '--blacklist-remove': opts.blacklistRemove = args[++i]; break;
+    case '--blacklist-list': opts.blacklistList = true; break;
+    case '--blacklist-clear': opts.blacklistClear = true; break;
     case '-h': case '--help': opts.help = true; break;
   }
 }
 
 if (opts.help) {
   console.log(`
-auto-selector-skill installer
+auto-selector-skill v${require('../package.json').version}
 
 Usage:
-  npx auto-selector-skill                  Install for all detected agents
-  npx auto-selector-skill --list           List detected agents (no install)
-  npx auto-selector-skill --only claude    Install for Claude Code only
-  npx auto-selector-skill --only gemini    Install for Gemini CLI only
-  npx auto-selector-skill --dry-run        Preview without writing files
+  npx auto-selector-skill                        Install for all detected agents
+  npx auto-selector-skill --list                 List detected agents (no install)
+  npx auto-selector-skill --only <agent>         Install for specific agent only
+  npx auto-selector-skill --dry-run              Preview without writing files
+  npx auto-selector-skill --uninstall            Remove from all agents
+
+Blacklist management:
+  npx auto-selector-skill --blacklist-add <name>     Exclude a skill/plugin
+  npx auto-selector-skill --blacklist-remove <name>  Re-include a skill/plugin
+  npx auto-selector-skill --blacklist-list            Show current blacklist
+  npx auto-selector-skill --blacklist-clear           Clear blacklist
+
+Slash commands (in AI chat):
+  /auto-selector help              Show all commands
+  /auto-selector on|off            Enable/disable
+  /auto-selector list              List detected skills/plugins
+  /auto-selector skip-confirm on   Skip confirmation dialog
+  /auto-selector blacklist ...     Manage blacklist
+  /auto-selector status            Show current state
 
 Supported agents: ${PROVIDERS.map(p => p.id).join(', ')}
 `);
+  process.exit(0);
+}
+
+// ── Blacklist helpers ────────────────────────────────────────────────────────
+const BLACKLIST_FILE = path.join(os.homedir(), '.auto-selector-skill-blacklist.json');
+
+function readBlacklist() {
+  try { return JSON.parse(fs.readFileSync(BLACKLIST_FILE, 'utf8')); } catch (e) { return []; }
+}
+
+function writeBlacklist(list) {
+  fs.writeFileSync(BLACKLIST_FILE, JSON.stringify(list, null, 2) + '\n');
+}
+
+if (opts.blacklistList) {
+  const list = readBlacklist();
+  if (list.length === 0) {
+    console.log('📋 Blacklist is empty.');
+  } else {
+    console.log(`📋 Blacklist (${list.length}):`);
+    for (const name of list) console.log(`  🚫 ${name}`);
+  }
+  process.exit(0);
+}
+
+if (opts.blacklistAdd) {
+  const list = readBlacklist();
+  if (list.includes(opts.blacklistAdd)) {
+    console.log(`⚠️  "${opts.blacklistAdd}" is already blacklisted.`);
+  } else {
+    list.push(opts.blacklistAdd);
+    writeBlacklist(list);
+    console.log(`🚫 Added "${opts.blacklistAdd}" to blacklist.`);
+  }
+  process.exit(0);
+}
+
+if (opts.blacklistRemove) {
+  const list = readBlacklist();
+  const idx = list.indexOf(opts.blacklistRemove);
+  if (idx === -1) {
+    console.log(`⚠️  "${opts.blacklistRemove}" is not in the blacklist.`);
+  } else {
+    list.splice(idx, 1);
+    writeBlacklist(list);
+    console.log(`✅ Removed "${opts.blacklistRemove}" from blacklist.`);
+  }
+  process.exit(0);
+}
+
+if (opts.blacklistClear) {
+  writeBlacklist([]);
+  console.log('✅ Blacklist cleared.');
+  process.exit(0);
+}
+
+// ── Uninstall ────────────────────────────────────────────────────────────────
+if (opts.uninstall) {
+  console.log(`🗑️  Uninstalling ${PLUGIN_NAME}...\n`);
+
+  for (const provider of PROVIDERS) {
+    try {
+      if (provider.id === 'claude') {
+        const claudeDir = process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude');
+        const cacheDir = path.join(claudeDir, 'plugins', 'cache', PLUGIN_NAME);
+        if (fs.existsSync(cacheDir)) {
+          fs.rmSync(cacheDir, { recursive: true, force: true });
+          console.log(`  ✅ ${provider.label} — removed plugin files`);
+        }
+        // Remove from installed_plugins.json
+        const pluginsJson = path.join(claudeDir, 'plugins', 'installed_plugins.json');
+        if (fs.existsSync(pluginsJson)) {
+          const data = JSON.parse(fs.readFileSync(pluginsJson, 'utf8'));
+          delete data.plugins[`${PLUGIN_NAME}@${PLUGIN_NAME}`];
+          fs.writeFileSync(pluginsJson, JSON.stringify(data, null, 2) + '\n');
+          console.log(`  ✅ ${provider.label} — unregistered from installed_plugins.json`);
+        }
+      }
+      // Other providers: remove installed files
+      if (provider.id === 'gemini') {
+        const f = path.join(os.homedir(), '.gemini', 'GEMINI.md');
+        if (fs.existsSync(f)) { fs.unlinkSync(f); console.log(`  ✅ ${provider.label} — removed GEMINI.md`); }
+      }
+      if (provider.id === 'codex') {
+        const f = path.join(os.homedir(), '.codex', 'AGENTS.md');
+        if (fs.existsSync(f)) { fs.unlinkSync(f); console.log(`  ✅ ${provider.label} — removed AGENTS.md`); }
+      }
+      if (provider.id === 'cursor') {
+        const f = path.join(os.homedir(), '.cursor', 'rules', 'auto-selector-skill.md');
+        if (fs.existsSync(f)) { fs.unlinkSync(f); console.log(`  ✅ ${provider.label} — removed rule file`); }
+      }
+      if (provider.id === 'windsurf') {
+        const f = path.join(os.homedir(), '.windsurf', 'rules', 'auto-selector-skill.md');
+        if (fs.existsSync(f)) { fs.unlinkSync(f); console.log(`  ✅ ${provider.label} — removed rule file`); }
+      }
+      if (provider.id === 'cline') {
+        const f = path.join(os.homedir(), '.clinerules', 'auto-selector-skill.md');
+        if (fs.existsSync(f)) { fs.unlinkSync(f); console.log(`  ✅ ${provider.label} — removed rule file`); }
+      }
+      if (provider.id === 'copilot') {
+        const f = path.join(os.homedir(), '.config', 'github-copilot', 'auto-selector-skill.md');
+        if (fs.existsSync(f)) { fs.unlinkSync(f); console.log(`  ✅ ${provider.label} — removed rule file`); }
+      }
+    } catch (e) {
+      console.log(`  ❌ ${provider.label} — ${e.message}`);
+    }
+  }
+
+  // Remove blacklist file
+  if (fs.existsSync(BLACKLIST_FILE)) {
+    fs.unlinkSync(BLACKLIST_FILE);
+    console.log(`  ✅ Blacklist file removed`);
+  }
+
+  console.log(`\n🎉 ${PLUGIN_NAME} uninstalled. Restart your AI coding agent.`);
   process.exit(0);
 }
 
