@@ -22,7 +22,7 @@
 1. Fork 仓库
 2. 创建分支：`git checkout -b feature/my-feature`
 3. 改代码
-4. 测试：重启 Claude Code，确认钩子正常加载，路由逻辑符合预期
+4. 测试：重启你的 AI 编码助手，确认钩子正常加载，路由逻辑符合预期
 5. 提交 PR
 
 ### 代码规范
@@ -35,7 +35,7 @@
 ### 测试
 
 改完后手动测试：
-1. 重启 Claude Code
+1. 重启你的 AI 编码助手
 2. 确认钩子输出 `AUTO-SELECTOR-SKILL ACTIVE`
 3. 发一条消息，确认路由/确认流程正常
 4. 说 `stop auto-selector`，确认关闭

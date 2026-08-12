@@ -49,7 +49,7 @@ Auto Selector 扫描本地所有 skill/plugin
 npx auto-selector-skill
 ```
 
-重启 Claude Code 即可。
+重启你的 AI 编码助手即可。
 
 其他平台和安装方式见 [INSTALL.md](INSTALL.md)。
 

@@ -28,7 +28,7 @@ curl -fsSL https://raw.githubusercontent.com/ffdgdfhhhh/auto-selector-skill/main
 irm https://raw.githubusercontent.com/ffdgdfhhhh/auto-selector-skill/main/install.ps1 | iex
 ```
 
-安装完成，重启 Claude Code 即可。
+重启你的 AI 编码助手即可。
 
 ---
 
@@ -124,7 +124,7 @@ Copy-Item -Recurse auto-selector-skill $env:USERPROFILE\.claude\plugins\cache\au
 ]
 ```
 
-### 4. 重启 Claude Code
+### 4. 重启你的 AI 编码助手
 
 关闭当前会话，打开新会话。你应该看到钩子输出 `AUTO-SELECTOR-SKILL ACTIVE`。
 
@@ -138,13 +138,13 @@ Copy-Item -Recurse auto-selector-skill $env:USERPROFILE\.claude\plugins\cache\au
 rm -rf ~/.claude/plugins/cache/auto-selector-skill
 ```
 
-重启 Claude Code 即可。
+重启你的 AI 编码助手即可。
 
 ---
 
 ## 验证安装
 
-重启 Claude Code 后，发一条消息试试：
+重启你的 AI 编码助手后，发一条消息试试：
 
 ```
 skills
