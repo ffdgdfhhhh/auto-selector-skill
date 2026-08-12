@@ -1,0 +1,4 @@
+{
+  "name": "auto-selector-skill",
+  "description": "Always-on skill & plugin selector for Claude Code. Scans installed skills/plugins, analyzes user tasks, selects the best match, and asks for confirmation before invoking."
+}

@@ -1,0 +1,6 @@
+{
+  "name": "auto-selector-skill",
+  "version": "1.0.0",
+  "description": "Always-on skill & plugin selector for Claude Code",
+  "license": "MIT"
+}

@@ -1,0 +1,21 @@
+{
+  "name": "auto-selector-skill",
+  "description": "Always-on skill & plugin selector for Claude Code. Scans all installed skills/plugins, analyzes user tasks, selects the best match, and asks for confirmation before invoking.",
+  "author": {
+    "name": "auto-selector-skill"
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/src/hooks/selector-activate.js\"",
+            "timeout": 5,
+            "statusMessage": "Loading auto-selector-skill..."
+          }
+        ]
+      }
+    ]
+  }
+}
