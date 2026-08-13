@@ -1,200 +1,244 @@
-# Auto Selector Skill
+<div align="center">
 
-**AI 编码助手自动选择 Skill 插件** — 装了它，你再也不用记 `/skill-name`。
+# 🎯 Auto Selector Skill
 
-支持 **Claude Code、Codex、Gemini CLI、Cursor、Windsurf、Cline、Copilot** 等所有主流 AI 编码助手。
+**AI 编码助手的智能路由层**
 
-Auto Selector Skill 在每次会话启动时自动激活，扫描你本地安装的所有 skill 和 plugin，帮你找到最合适的工具来完成任务。
+[![npm version](https://img.shields.io/npm/v/auto-selector-skill?color=blue&label=npm&logo=npm)](https://www.npmjs.com/package/auto-selector-skill)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-yellow?logo=node.js)](https://nodejs.org)
+[![GitHub Stars](https://img.shields.io/github/stars/ffdgdfhhhh/auto-selector-skill?style=social)](https://github.com/ffdgdfhhhh/auto-selector-skill)
 
----
+*装了它，你再也不用记 `/skill-name`。*
 
-## 它做什么
+支持 **Claude Code · Codex · Gemini CLI · Cursor · Windsurf · Cline · Copilot**
 
-```
-你发消息
-  ↓
-Auto Selector 扫描本地所有 skill/plugin
-  ↓
-模型分析你的任务 → 从候选中选出最合适的
-  ↓
-展示给你确认："要用 [skill-name] 吗？"
-  ↓
-✅ 确认 → 自动调用该 skill
-❌ 取消 → 大模型直接回答
-没匹配 → 大模型直接回答
-```
+[快速安装](#-快速开始) · [功能特性](#-功能特性) · [支持平台](#-支持平台) · [详细文档](INSTALL.md)
+
+</div>
 
 ---
 
-## 特性
-
-| 特性 | 说明 |
-|------|------|
-| **零配置激活** | 插件装好就生效，不需要改 CLAUDE.md |
-| **动态扫描** | 每次对话自动读取系统 listing，装了新 skill 立刻可用 |
-| **智能分析** | 模型看完所有候选 skill 的描述后自己判断，不是关键词匹配 |
-| **用户确认** | 选完后问你，不强制调用，取消就回退到默认回答 |
-| **黑名单** | 可以排除特定 skill，永久生效 |
-| **链式路由** | 做计划 → 写代码 → 测试，自动串联整个流程 |
-| **学习能力** | 你纠正一次，本次对话内记住 |
-| **开关控制** | `auto-selector off` 关闭 / `auto-selector on` 开启 |
-
----
-
-## 安装
-
-一条命令搞定（需要 Node.js 18+）：
+## ⚡ 快速开始
 
 ```bash
 npx auto-selector-skill
 ```
 
-重启你的 AI 编码助手即可。
-
-其他平台和安装方式见 [INSTALL.md](INSTALL.md)。
+重启你的 AI 编码助手，完成。✅
 
 ---
 
-## 使用
-
-安装后无需任何操作，每次新对话自动生效。
-
-### 日常使用
-
-直接说你的需求就行。Auto Selector 会自动分析并推荐最合适的 skill：
+## 🔄 工作流程
 
 ```
-你: 帮我 debug 这个登录报错
-
-🧠 Auto Selector 分析：
-你的需求："帮我 debug 这个登录报错"
-→ 匹配到 [systematic-debugging] — 调试、追踪错误、定位根因
-
-要使用这个 skill 吗？
-  ✅ 确认 → 使用 systematic-debugging
-  ❌ 取消 → 我直接回答
+你发消息
+  │
+  ▼
+┌─────────────────────────────────────────────────────────┐
+│  Step 0   扫描本地 skill/plugin → 过滤黑名单 → 构建路由表   │
+│  Step 0.5 初始化项目认知 → 读取技术栈、结构 → 建立项目画像   │
+└─────────────────────────────────────────────────────────┘
+  │
+  ▼
+┌─────────────────────────────────────────────────────────┐
+│  Step 1   基于「项目上下文 + 用户需求」分析任务              │
+│           → 拆解子任务 → 识别需要的能力                     │
+│  Step 2   匹配 1~N 个 skill → 按依赖排序 → 生成执行计划     │
+└─────────────────────────────────────────────────────────┘
+  │
+  ▼
+┌─────────────────────────────────────────────────────────┐
+│  Step 3   弹出原生选择框（AskUserQuestion）                 │
+│           → 展示分析结果 + 推荐方案                        │
+└─────────────────────────────────────────────────────────┘
+  │
+  ├─ ✅ 确认推荐 → 按计划依次调用 skill
+  ├─ ✏️ 修改计划 → 调整 skill 或顺序
+  └─ ❌ 跳过     → 大模型直接回答
 ```
 
-### 聊天中使用的命令
+### 实际演示
+
+**你输入：**
+> 做个好看的页面，写完要测试
+
+**Auto Selector 回应：**
+```
+🧠 需求分析：你需要设计前端页面，并编写测试用例
+
+📁 项目：my-app (React + TypeScript + Tailwind + Vitest)
+
+📋 推荐执行计划：
+  1. [frontend-design] — 设计页面结构和样式
+  2. [test-driven-development] — 编写测试用例
+
+  ┌──────────────────────────────────┐
+  │  ✅ 执行完整计划                   │
+  │  ⚡ 只执行第一步 [frontend-design] │
+  │  ✏️ 修改计划                      │
+  │  ❌ 跳过，直接回答                 │
+  └──────────────────────────────────┘
+```
+
+---
+
+## ✨ 功能特性
+
+| 特性 | 说明 |
+|:-----|:-----|
+| 🚀 **零配置激活** | 装好就生效，不需要改 CLAUDE.md 或任何配置文件 |
+| 🔍 **项目感知** | 自动读取 package.json、技术栈、目录结构，推荐基于项目上下文 |
+| 🧠 **智能分析** | 先理解需求、拆解子任务，再匹配 skill，不是关键词匹配 |
+| 🔗 **多 skill 编排** | 复杂需求自动规划多个 skill 的执行顺序和依赖关系 |
+| 📋 **原生表单选择** | 使用 AskUserQuestion 弹出选择框，不是输入 1/2 |
+| 🛡️ **用户确认** | 每次推荐后问你确认，取消就回退到默认回答 |
+| 🚫 **黑名单** | 永久排除特定 skill，聊天命令或 CLI 都能管理 |
+| 🔁 **学习能力** | 你纠正一次，本次对话内记住你的偏好 |
+| ⏭️ **跳过确认** | 说"直接用"，后续自动调用，不再每次问你 |
+| 🔄 **链式执行** | plan → code → test → review，自动串联整个流程 |
+| 🪶 **超轻量** | 钩子脚本 < 5ms，不影响任何性能 |
+
+---
+
+## 📦 支持平台
+
+| 平台 | 机制 | 自动激活 |
+|:-----|:-----|:--------:|
+| **Claude Code** | Plugin (SessionStart hook) | ✅ |
+| **Gemini CLI** | Extension (GEMINI.md) | ✅ |
+| **Codex CLI** | AGENTS.md | ✅ |
+| **Cursor** | AGENTS.md + rules | ✅ |
+| **Windsurf** | AGENTS.md + rules | ✅ |
+| **Cline** | AGENTS.md + .clinerules | ✅ |
+| **GitHub Copilot** | AGENTS.md | ✅ |
+
+---
+
+## 💬 聊天命令
 
 在 AI 对话中直接输入：
 
 | 命令 | 效果 |
-|------|------|
-| 直接说需求 | 自动分析并推荐 skill |
-| `auto-selector help` | 显示所有可用命令 |
-| `auto-selector on` | 开启自动选择 |
-| `auto-selector off` | 关闭自动选择 |
-| `auto-selector list` | 列出所有检测到的 skill/plugin |
-| `auto-selector skip-confirm on` | 跳过确认，匹配后自动调用 |
-| `auto-selector skip-confirm off` | 恢复确认（默认） |
-| `auto-selector blacklist add X` | 将 skill X 加入黑名单，不再自动推荐 |
-| `auto-selector blacklist remove X` | 将 skill X 从黑名单移除 |
-| `auto-selector blacklist list` | 查看当前黑名单 |
-| `auto-selector blacklist clear` | 清空黑名单 |
-| `auto-selector status` | 查看当前状态（开关、黑名单、跳过确认） |
-| `skills` / `路由表` | 查看所有本地可用的 skill/plugin |
-| `/caveman` 等明确指定 | 跳过路由，直接调用该 skill |
-| `直接用` / `不用问了` | 等同于 `skip-confirm on` |
-| `不要用 X` / `ignore X` | 等同于 `blacklist add X` |
-| `恢复 X` | 等同于 `blacklist remove X` |
+|:-----|:-----|
+| 直接说需求 | 自动分析、推荐 skill |
+| `auto-selector help` | 显示所有命令 |
+| `auto-selector on` / `off` | 开启 / 关闭 |
+| `auto-selector list` | 列出所有 skill/plugin |
+| `auto-selector scan` | 重新扫描项目和 skill |
+| `auto-selector status` | 查看当前状态 |
+| `auto-selector skip-confirm on/off` | 跳过 / 恢复确认 |
+| `auto-selector blacklist add X` | 将 X 加入黑名单 |
+| `auto-selector blacklist remove X` | 将 X 移出黑名单 |
+| `auto-selector blacklist list` | 查看黑名单 |
+| `直接用` / `不用问了` | 跳过确认模式 |
+| `不要用 X` / `ignore X` | 加入黑名单 |
+| `skills` / `路由表` | 查看所有可用 skill |
 
-### 终端 CLI 命令
+---
+
+## 🖥️ CLI 命令
 
 ```bash
-npx auto-selector-skill                        # 安装（自动检测所有平台）
-npx auto-selector-skill --help                 # 显示帮助
-npx auto-selector-skill --list                 # 列出检测到的 AI 编码助手
-npx auto-selector-skill --only claude          # 只安装到 Claude Code
-npx auto-selector-skill --only cursor          # 只安装到 Cursor
-npx auto-selector-skill --dry-run              # 预览，不写文件
-npx auto-selector-skill --uninstall            # 从所有平台卸载
+npx auto-selector-skill                       # 安装（自动检测所有平台）
+npx auto-selector-skill --help                # 帮助
+npx auto-selector-skill --list                # 列出检测到的 AI 助手
+npx auto-selector-skill --only claude         # 只装到 Claude Code
+npx auto-selector-skill --only cursor         # 只装到 Cursor
+npx auto-selector-skill --dry-run             # 预览，不写文件
+npx auto-selector-skill --uninstall           # 卸载
 
-# 黑名单管理
-npx auto-selector-skill --blacklist-add X      # 将 skill X 加入黑名单
-npx auto-selector-skill --blacklist-remove X   # 将 skill X 从黑名单移除
-npx auto-selector-skill --blacklist-list       # 查看黑名单
-npx auto-selector-skill --blacklist-clear      # 清空黑名单
+# 黑名单
+npx auto-selector-skill --blacklist-add X     # 加入黑名单
+npx auto-selector-skill --blacklist-remove X  # 移出黑名单
+npx auto-selector-skill --blacklist-list      # 查看
+npx auto-selector-skill --blacklist-clear     # 清空
 ```
 
 ---
 
-## 项目结构
+## 🏗️ 项目结构
 
 ```
 auto-selector-skill/
 ├── .claude-plugin/
-│   └── plugin.json              # Claude Code 插件配置
+│   └── plugin.json                    # Claude Code 插件配置
 ├── .codex/
-│   └── config.toml              # Codex 配置
+│   └── config.toml                    # Codex 配置
 ├── .github/plugin/
-│   └── marketplace.json         # 插件市场元数据
-├── AGENTS.md                    # Codex / opencode / Cursor / Windsurf / Cline / Copilot
-├── GEMINI.md                    # Gemini CLI
-├── gemini-extension.json        # Gemini CLI 扩展配置
-├── plugins/auto-selector-skill/skills/auto-selector-skill/
-│   └── SKILL.md                 # 路由逻辑（唯一编辑源）
+│   └── marketplace.json               # 插件市场元数据
+├── plugins/auto-selector-skill/
+│   └── skills/auto-selector-skill/
+│       └── SKILL.md                   # 核心路由逻辑（唯一编辑源）
 ├── src/hooks/
-│   └── selector-activate.js     # Claude Code SessionStart 钩子
-├── install.sh                   # macOS/Linux 一键安装
-├── install.ps1                  # Windows 一键安装
+│   └── selector-activate.js           # SessionStart 钩子
+├── bin/install.js                     # 跨平台安装器
+├── install.sh                         # macOS/Linux 安装脚本
+├── install.ps1                        # Windows 安装脚本
+├── AGENTS.md                          # Codex / Cursor / Windsurf / Cline / Copilot
+├── GEMINI.md                          # Gemini CLI
+├── gemini-extension.json              # Gemini 扩展配置
 ├── package.json
 ├── LICENSE
-├── INSTALL.md                   # 详细安装教程
-├── CONTRIBUTING.md              # 贡献指南
-├── CHANGELOG.md                 # 版本记录
+├── INSTALL.md                         # 详细安装教程
+├── CHANGELOG.md                       # 版本记录
 └── README.md
 ```
 
 ---
 
-## 支持的平台
+## 🔧 工作原理
 
-| 平台 | 机制 | 自动激活 | 安装方式 |
-|------|------|---------|---------|
-| **Claude Code** | Plugin (SessionStart hook) | ✅ | `install.sh` / `install.ps1` |
-| **Gemini CLI** | Extension (GEMINI.md) | ✅ | `gemini extensions install` |
-| **Codex CLI** | AGENTS.md | ✅ | `npx skills add` |
-| **Cursor** | AGENTS.md + rules | ✅ | `npx skills add -a cursor` |
-| **Windsurf** | AGENTS.md + rules | ✅ | `npx skills add -a windsurf` |
-| **Cline** | AGENTS.md + .clinerules | ✅ | `npx skills add -a cline` |
-| **GitHub Copilot** | AGENTS.md | ✅ | `npx skills add -a github-copilot` |
-| **opencode** | AGENTS.md | ✅ | 复制到 config 目录 |
-| **其他** | SKILL.md 通用格式 | 手动 | 复制 SKILL.md 到对应目录 |
+核心路由逻辑在 `SKILL.md` 中，**不依赖任何平台 API**，所以能跨平台工作。
+
+| 平台 | 激活方式 |
+|:-----|:---------|
+| Claude Code | `SessionStart` 钩子读取 SKILL.md → 注入系统上下文 |
+| Gemini CLI | `gemini-extension.json` → `GEMINI.md` → 引用 SKILL.md |
+| Codex / Cursor / Windsurf / Cline / Copilot | `AGENTS.md` 引用 SKILL.md，平台自动发现 |
 
 ---
 
-## 工作原理
+## ❓ FAQ
 
-Auto Selector Skill 的核心路由逻辑在 `SKILL.md` 中，**不依赖任何特定平台的 API**，所以能跨平台工作。
+<details>
+<summary><b>装了会影响性能吗？</b></summary>
+<br>
+钩子脚本只有几行 JS，执行时间 &lt; 5ms。选择分析发生在模型推理阶段，不影响响应速度。
+</details>
 
-不同平台的激活机制：
+<details>
+<summary><b>不想每次都确认？</b></summary>
+<br>
+说一次"直接用"或"不用问了"，后续就跳过确认自动调用。
+</details>
 
-| 平台 | 怎么激活 |
-|------|---------|
-| **Claude Code** | `SessionStart` 钩子自动读取 SKILL.md 并注入系统上下文 |
-| **Gemini CLI** | `gemini-extension.json` 指向 `GEMINI.md`，`GEMINI.md` 引用 SKILL.md |
-| **Codex / Cursor / Windsurf / Cline / Copilot** | `AGENTS.md` 引用 SKILL.md，平台自动发现 |
-| **其他** | 将 SKILL.md 内容复制到平台的规则文件中 |
+<details>
+<summary><b>新装的 skill 能识别吗？</b></summary>
+<br>
+能。每次对话都会重新扫描系统 listing，新装的 skill 立刻可用。也可以手动说"重新扫描"触发。
+</details>
+
+<details>
+<summary><b>能只对某些 skill 关闭选择吗？</b></summary>
+<br>
+用黑名单功能：聊天中说 <code>auto-selector blacklist add &lt;skill名&gt;</code>，或终端跑 <code>npx auto-selector-skill --blacklist-add &lt;skill名&gt;</code>。
+</details>
+
+<details>
+<summary><b>复杂任务需要多个 skill 怎么办？</b></summary>
+<br>
+Auto Selector 会自动拆解需求、识别所有需要的 skill，按依赖关系排序生成执行计划，你可以选择执行全部或只执行第一步。
+</details>
 
 ---
 
-## FAQ
+## 🤝 Contributing
 
-**Q: 装了这个会不会影响性能？**
-A: 钩子脚本只有几行 JS，执行时间 < 5ms。选择分析发生在模型推理阶段，不影响响应速度。
-
-**Q: 我不想每次都确认，能自动调用吗？**
-A: 说一次"直接用"或"不用问了"，后续就跳过确认自动调用。
-
-**Q: 我新装了一个 skill，Auto Selector 能识别吗？**
-A: 能。每次对话它都会重新扫描系统 listing，新装的 skill 立刻可用。
-
-**Q: 能不能只对某些 skill 关闭选择？**
-A: 可以。用黑名单功能：聊天中说 `auto-selector blacklist add <skill名>`，或终端跑 `npx auto-selector-skill --blacklist-add <skill名>`。
+欢迎 PR！见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 ---
 
-## License
+## 📄 License
 
-MIT
+[MIT](LICENSE)
