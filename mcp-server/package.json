@@ -1,0 +1,17 @@
+{
+  "name": "auto-selector-skill-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for auto-selector-skill — provides intelligent skill routing for any MCP-compatible AI assistant",
+  "main": "index.js",
+  "bin": {
+    "auto-selector-mcp": "./index.js"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": ["mcp", "skill", "router", "ai", "claude", "cursor", "windsurf", "cline", "copilot"],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  }
+}
