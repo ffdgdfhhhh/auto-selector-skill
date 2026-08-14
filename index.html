@@ -1,0 +1,767 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Auto Selector Skill — AI 编码助手的智能路由层</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root {
+  --bg: #FAFAF7;
+  --bg-alt: #F0EFE9;
+  --text: #1A1917;
+  --text-2: #6B6760;
+  --text-3: #9C9890;
+  --accent: #D4920A;
+  --accent-light: #FDF6E8;
+  --accent-glow: rgba(212,146,10,0.12);
+  --green: #2D8B57;
+  --green-light: #E8F5ED;
+  --blue: #3B7DD8;
+  --blue-light: #EAF0FA;
+  --red: #D44040;
+  --red-light: #FDE8E8;
+  --purple: #7C5CBF;
+  --purple-light: #F0EBFA;
+  --surface: #FFFFFF;
+  --surface-alt: #F5F4F0;
+  --border: rgba(26,25,23,0.06);
+  --border-strong: rgba(26,25,23,0.12);
+  --shadow-sm: 0 1px 3px rgba(26,25,23,0.04);
+  --shadow-md: 0 4px 20px rgba(26,25,23,0.06);
+  --shadow-lg: 0 8px 40px rgba(26,25,23,0.08);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-xs: 6px;
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+  --font-body: 'Space Grotesk', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
+}
+
+@media(prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg: #0C0C0A;
+    --bg-alt: #151412;
+    --text: #E8E6E1;
+    --text-2: #9C9890;
+    --text-3: #6B6760;
+    --accent: #EAA520;
+    --accent-light: #2A2008;
+    --accent-glow: rgba(234,165,32,0.1);
+    --green: #4CAF6E;
+    --green-light: #121F16;
+    --blue: #5B9AE8;
+    --blue-light: #121822;
+    --red: #E85555;
+    --red-light: #221212;
+    --purple: #9B7DD4;
+    --purple-light: #1A1522;
+    --surface: #1A1917;
+    --surface-alt: #201F1B;
+    --border: rgba(232,230,225,0.06);
+    --border-strong: rgba(232,230,225,0.1);
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.2);
+    --shadow-md: 0 4px 20px rgba(0,0,0,0.3);
+    --shadow-lg: 0 8px 40px rgba(0,0,0,0.4);
+  }
+}
+
+[data-theme="dark"]{
+  --bg: #0C0C0A;
+  --bg-alt: #151412;
+  --text: #E8E6E1;
+  --text-2: #9C9890;
+  --text-3: #6B6760;
+  --accent: #EAA520;
+  --accent-light: #2A2008;
+  --accent-glow: rgba(234,165,32,0.1);
+  --green: #4CAF6E;
+  --green-light: #121F16;
+  --blue: #5B9AE8;
+  --blue-light: #121822;
+  --red: #E85555;
+  --red-light: #221212;
+  --purple: #9B7DD4;
+  --purple-light: #1A1522;
+  --surface: #1A1917;
+  --surface-alt: #201F1B;
+  --border: rgba(232,230,225,0.06);
+  --border-strong: rgba(232,230,225,0.1);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.2);
+  --shadow-md: 0 4px 20px rgba(0,0,0,0.3);
+  --shadow-lg: 0 8px 40px rgba(0,0,0,0.4);
+}
+
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+
+body{
+  font-family:var(--font-body);
+  color:var(--text);
+  background:var(--bg);
+  line-height:1.6;
+  font-size:15px;
+  overflow-x:hidden;
+}
+
+.page{max-width:1080px;margin:0 auto;padding:0 24px}
+
+/* ─── NAV ─── */
+nav{
+  position:sticky;top:0;z-index:100;
+  background:var(--bg);
+  border-bottom:1px solid var(--border);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+}
+nav .page{
+  display:flex;align-items:center;justify-content:space-between;
+  height:56px;
+}
+.nav-logo{
+  font-weight:700;font-size:17px;letter-spacing:-0.02em;
+  color:var(--text);text-decoration:none;
+}
+.nav-logo span{color:var(--accent)}
+.nav-links{display:flex;gap:24px;align-items:center}
+.nav-links a{
+  font-size:13px;font-weight:500;color:var(--text-2);
+  text-decoration:none;transition:color .15s;
+  letter-spacing:0.01em;
+}
+.nav-links a:hover{color:var(--text)}
+.nav-cta{
+  font-size:13px;font-weight:600;color:var(--bg)!important;
+  background:var(--accent);padding:6px 14px;
+  border-radius:var(--radius-xs);
+  transition:opacity .15s;
+}
+.nav-cta:hover{opacity:.85}
+
+/* ─── HERO ─── */
+.hero{
+  padding:80px 0 48px;
+  text-align:center;
+}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 14px;
+  background:var(--accent-light);color:var(--accent);
+  border-radius:100px;font-size:12px;font-weight:600;
+  letter-spacing:0.04em;text-transform:uppercase;
+  margin-bottom:24px;
+  border:1px solid var(--accent-glow);
+}
+.hero-badge::before{
+  content:'';width:6px;height:6px;
+  background:var(--accent);border-radius:50%;
+  animation:badge-pulse 2s ease-in-out infinite;
+}
+@keyframes badge-pulse{
+  0%,100%{opacity:1;transform:scale(1)}
+  50%{opacity:.5;transform:scale(.8)}
+}
+.hero h1{
+  font-size:clamp(36px,5vw,52px);
+  font-weight:700;letter-spacing:-0.035em;
+  line-height:1.1;text-wrap:balance;
+  margin-bottom:16px;
+}
+.hero h1 .accent{color:var(--accent)}
+.hero-sub{
+  font-size:17px;color:var(--text-2);
+  max-width:520px;margin:0 auto 32px;
+  line-height:1.6;
+}
+.hero-install{
+  display:inline-flex;align-items:center;
+  background:var(--surface);border:1px solid var(--border-strong);
+  border-radius:var(--radius);padding:4px;
+  box-shadow:var(--shadow-md);
+}
+.hero-install code{
+  font-family:var(--font-mono);font-size:14px;
+  padding:10px 16px;color:var(--text);
+  letter-spacing:-0.01em;
+}
+.hero-install .copy-btn{
+  padding:10px 16px;
+  background:var(--accent);color:#fff;
+  border:none;border-radius:var(--radius-sm);
+  font-family:var(--font-body);font-size:13px;
+  font-weight:600;cursor:pointer;
+  transition:opacity .15s;
+  display:flex;align-items:center;gap:6px;
+  white-space:nowrap;
+}
+.hero-install .copy-btn:hover{opacity:.85}
+.hero-platforms{
+  margin-top:20px;
+  font-size:12px;color:var(--text-3);
+  letter-spacing:0.02em;
+}
+.hero-platforms strong{color:var(--text-2);font-weight:500}
+
+/* ─── FLOW DIAGRAM ─── */
+.flow-section{
+  padding:24px 0 64px;
+}
+.flow-container{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:40px 32px 32px;
+  box-shadow:var(--shadow-md);
+  position:relative;
+  overflow:hidden;
+}
+.flow-container::before{
+  content:'';position:absolute;top:0;left:0;right:0;
+  height:1px;
+  background:linear-gradient(90deg,transparent,var(--accent-glow),transparent);
+}
+.flow-label{
+  text-align:center;font-size:11px;
+  color:var(--text-3);font-weight:600;
+  letter-spacing:0.08em;text-transform:uppercase;
+  margin-bottom:28px;
+}
+.flow-svg{
+  width:100%;height:auto;display:block;
+  max-height:280px;
+}
+
+/* ─── HOW IT WORKS ─── */
+.how-section{padding:64px 0}
+.section-title{
+  font-size:28px;font-weight:700;
+  letter-spacing:-0.03em;margin-bottom:8px;
+}
+.section-sub{
+  color:var(--text-2);font-size:15px;
+  margin-bottom:40px;max-width:500px;
+}
+.how-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:20px;
+}
+.how-card{
+  padding:28px 24px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  position:relative;
+  transition:border-color .2s,box-shadow .2s;
+}
+.how-card:hover{
+  border-color:var(--border-strong);
+  box-shadow:var(--shadow-md);
+}
+.how-num{
+  font-family:var(--font-mono);font-size:11px;
+  font-weight:500;color:var(--accent);
+  letter-spacing:0.05em;
+  margin-bottom:12px;
+}
+.how-card h3{
+  font-size:17px;font-weight:600;
+  letter-spacing:-0.02em;margin-bottom:8px;
+}
+.how-card p{
+  font-size:13.5px;color:var(--text-2);
+  line-height:1.6;
+}
+
+/* ─── DEMO ─── */
+.demo-section{padding:0 0 64px}
+.demo-box{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  overflow:hidden;
+  box-shadow:var(--shadow-md);
+}
+.demo-header{
+  display:flex;align-items:center;gap:8px;
+  padding:12px 20px;
+  background:var(--surface-alt);
+  border-bottom:1px solid var(--border);
+}
+.demo-dot{width:10px;height:10px;border-radius:50%}
+.demo-dot:nth-child(1){background:#E85555}
+.demo-dot:nth-child(2){background:#EAA520}
+.demo-dot:nth-child(3){background:#4CAF6E}
+.demo-title{
+  margin-left:8px;font-size:12px;
+  color:var(--text-3);font-weight:500;
+  font-family:var(--font-mono);
+}
+.demo-body{padding:24px;font-size:14px;line-height:1.7}
+.demo-input{
+  background:var(--accent-light);
+  border-left:3px solid var(--accent);
+  padding:12px 16px;border-radius:0 var(--radius-xs) var(--radius-xs) 0;
+  margin-bottom:20px;font-weight:500;
+  font-size:14px;
+}
+.demo-thinking{
+  color:var(--text-2);font-size:13px;
+  padding:16px 0;border-top:1px solid var(--border);
+  margin-bottom:16px;
+}
+.demo-thinking .label{
+  font-size:11px;font-weight:600;
+  color:var(--accent);letter-spacing:0.06em;
+  text-transform:uppercase;margin-bottom:8px;
+}
+.demo-plan{
+  display:flex;flex-direction:column;gap:8px;
+  margin:12px 0;
+}
+.demo-step{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 14px;
+  background:var(--surface-alt);
+  border-radius:var(--radius-xs);
+  font-size:13px;
+}
+.demo-step-num{
+  font-family:var(--font-mono);font-size:11px;
+  font-weight:600;color:var(--accent);
+  min-width:20px;
+}
+.demo-step-name{
+  font-weight:600;font-family:var(--font-mono);
+  font-size:12px;color:var(--blue);
+}
+.demo-step-desc{color:var(--text-2);font-size:13px}
+.demo-options{
+  display:flex;flex-wrap:wrap;gap:8px;
+  margin-top:16px;padding-top:16px;
+  border-top:1px solid var(--border);
+}
+.demo-opt{
+  padding:8px 14px;
+  border:1px solid var(--border-strong);
+  border-radius:var(--radius-xs);
+  font-size:12.5px;font-weight:500;
+  cursor:default;transition:all .15s;
+}
+.demo-opt:hover{
+  border-color:var(--accent);color:var(--accent);
+  background:var(--accent-light);
+}
+.demo-opt.primary{
+  background:var(--accent);color:#fff;
+  border-color:var(--accent);
+}
+.demo-opt.primary:hover{
+  opacity:.85;color:#fff;
+}
+
+/* ─── FEATURES ─── */
+.features-section{padding:64px 0}
+.features-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;
+}
+.feature-card{
+  padding:24px 20px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  transition:border-color .2s;
+}
+.feature-card:hover{border-color:var(--border-strong)}
+.feature-icon{
+  width:36px;height:36px;
+  border-radius:var(--radius-sm);
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;margin-bottom:14px;
+}
+.feature-icon.amber{background:var(--accent-light);color:var(--accent)}
+.feature-icon.green{background:var(--green-light);color:var(--green)}
+.feature-icon.blue{background:var(--blue-light);color:var(--blue)}
+.feature-icon.purple{background:var(--purple-light);color:var(--purple)}
+.feature-card h3{
+  font-size:14px;font-weight:600;
+  letter-spacing:-0.01em;margin-bottom:4px;
+}
+.feature-card p{
+  font-size:13px;color:var(--text-2);
+  line-height:1.55;
+}
+
+/* ─── PLATFORMS ─── */
+.platforms-section{padding:64px 0}
+.platform-grid{
+  display:flex;flex-wrap:wrap;gap:12px;
+}
+.platform-badge{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 16px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  font-size:13px;font-weight:500;
+  transition:border-color .2s;
+}
+.platform-badge:hover{border-color:var(--border-strong)}
+.platform-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--green);
+}
+
+/* ─── COMMANDS ─── */
+.commands-section{padding:64px 0}
+.cmd-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:16px;
+}
+.cmd-card{
+  padding:20px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+}
+.cmd-card h3{
+  font-size:14px;font-weight:600;
+  margin-bottom:12px;
+  letter-spacing:-0.01em;
+}
+.cmd-list{
+  display:flex;flex-direction:column;gap:6px;
+}
+.cmd-item{
+  display:flex;align-items:center;gap:10px;
+  font-size:13px;
+}
+.cmd-item code{
+  font-family:var(--font-mono);font-size:11.5px;
+  background:var(--surface-alt);color:var(--accent);
+  padding:3px 7px;border-radius:4px;
+  white-space:nowrap;
+}
+.cmd-item span{color:var(--text-2)}
+
+/* ─── FOOTER ─── */
+footer{
+  padding:40px 0;
+  border-top:1px solid var(--border);
+  text-align:center;
+}
+.footer-links{
+  display:flex;justify-content:center;gap:24px;
+  margin-bottom:12px;
+}
+.footer-links a{
+  font-size:13px;color:var(--text-2);
+  text-decoration:none;transition:color .15s;
+}
+.footer-links a:hover{color:var(--text)}
+.footer-copy{
+  font-size:12px;color:var(--text-3);
+}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:768px){
+  .how-grid,.features-grid{grid-template-columns:1fr}
+  .cmd-grid{grid-template-columns:1fr}
+  .hero{padding:48px 0 32px}
+  .nav-links a:not(.nav-cta){display:none}
+  .flow-container{padding:24px 16px 20px}
+  .demo-options{flex-direction:column}
+}
+
+/* ─── ANIMATIONS ─── */
+@media(prefers-reduced-motion:no-preference){
+  .hero,.how-card,.feature-card,.platform-badge,.cmd-card{
+    animation:fadeUp .5s ease both;
+  }
+  .how-card:nth-child(2){animation-delay:.08s}
+  .how-card:nth-child(3){animation-delay:.16s}
+  .feature-card:nth-child(2){animation-delay:.04s}
+  .feature-card:nth-child(3){animation-delay:.08s}
+  .feature-card:nth-child(4){animation-delay:.12s}
+  .feature-card:nth-child(5){animation-delay:.16s}
+  .feature-card:nth-child(6){animation-delay:.2s}
+  .platform-badge:nth-child(2){animation-delay:.04s}
+  .platform-badge:nth-child(3){animation-delay:.08s}
+  .platform-badge:nth-child(4){animation-delay:.12s}
+  .platform-badge:nth-child(5){animation-delay:.16s}
+  .platform-badge:nth-child(6){animation-delay:.2s}
+  .platform-badge:nth-child(7){animation-delay:.24s}
+}
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(16px)}
+  to{opacity:1;transform:translateY(0)}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+<div class="page">
+  <a href="#" class="nav-logo">auto-selector<span>.skill</span></a>
+  <div class="nav-links">
+    <a href="#how">How it works</a>
+    <a href="#features">Features</a>
+    <a href="#commands">Commands</a>
+    <a href="https://github.com/ffdgdfhhhh/auto-selector-skill" target="_blank" rel="noopener">GitHub</a>
+    <a href="https://www.npmjs.com/package/auto-selector-skill" target="_blank" rel="noopener" class="nav-cta">npm install</a>
+  </div>
+</div>
+</nav>
+
+<!-- HERO -->
+<header class="hero page">
+  <div class="hero-badge">Open Source · MIT License</div>
+  <h1>Your AI assistant's<br><span class="accent">routing intelligence</span></h1>
+  <p class="hero-sub">
+    自动扫描本地 skill，分析你的需求，匹配最合适的工具。<br>
+    装了它，再也不用记 <code style="font-family:var(--font-mono);font-size:13px;background:var(--surface-alt);padding:2px 6px;border-radius:4px">/skill-name</code>
+  </p>
+  <div class="hero-install">
+    <code>npx auto-selector-skill</code>
+    <button class="copy-btn" onclick="navigator.clipboard.writeText('npx auto-selector-skill');this.textContent='Copied ✓';setTimeout(()=>this.innerHTML='<svg width=14 height=14 viewBox=\'0 0 24 24\' fill=none stroke=currentcolor stroke-width=2><rect x=9 y=9 width=13 height=13 rx=2/><path d=\'M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1\'/></svg> Copy',1500)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy
+    </button>
+  </div>
+  <p class="hero-platforms">
+    <strong>Claude Code</strong> · Codex · Gemini CLI · Cursor · Windsurf · Cline · Copilot
+  </p>
+</header>
+
+<!-- FLOW DIAGRAM -->
+<section class="flow-section page">
+<div class="flow-container">
+  <div class="flow-label">How the routing works</div>
+  <svg class="flow-svg" viewBox="0 0 920 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Connecting lines -->
+    <path d="M140,120 Q280,120 460,120" stroke="var(--border-strong)" stroke-width="2" stroke-dasharray="4 4"/>
+    <path d="M460,120 Q580,120 760,40" stroke="var(--border-strong)" stroke-width="1.5" stroke-dasharray="4 4"/>
+    <path d="M460,120 Q580,120 760,100" stroke="var(--border-strong)" stroke-width="1.5" stroke-dasharray="4 4"/>
+    <path d="M460,120 Q580,120 760,160" stroke="var(--border-strong)" stroke-width="1.5" stroke-dasharray="4 4"/>
+    <path d="M460,120 Q580,120 760,220" stroke="var(--border-strong)" stroke-width="1.5" stroke-dasharray="4 4"/>
+
+    <!-- Entry node -->
+    <rect x="40" y="96" width="120" height="48" rx="10" fill="var(--surface-alt)" stroke="var(--border-strong)" stroke-width="1.5"/>
+    <text x="100" y="124" text-anchor="middle" font-family="var(--font-mono)" font-size="12" font-weight="600" fill="var(--text)">User Input</text>
+
+    <!-- Analyzer node -->
+    <rect x="370" y="88" width="180" height="64" rx="12" fill="var(--accent-light)" stroke="var(--accent)" stroke-width="1.5" opacity="0.9"/>
+    <text x="460" y="116" text-anchor="middle" font-family="var(--font-mono)" font-size="12" font-weight="700" fill="var(--accent)">🧠 Analyze + Match</text>
+    <text x="460" y="134" text-anchor="middle" font-family="var(--font-body)" font-size="10" fill="var(--text-2)">project context + user intent</text>
+
+    <!-- Skill nodes -->
+    <rect x="760" y="20" width="140" height="40" rx="8" fill="var(--green-light)" stroke="var(--green)" stroke-width="1.5"/>
+    <text x="830" y="45" text-anchor="middle" font-family="var(--font-mono)" font-size="11" font-weight="600" fill="var(--green)">writing-plans</text>
+
+    <rect x="760" y="80" width="140" height="40" rx="8" fill="var(--blue-light)" stroke="var(--blue)" stroke-width="1.5"/>
+    <text x="830" y="105" text-anchor="middle" font-family="var(--font-mono)" font-size="11" font-weight="600" fill="var(--blue)">frontend-design</text>
+
+    <rect x="760" y="140" width="140" height="40" rx="8" fill="var(--purple-light)" stroke="var(--purple)" stroke-width="1.5"/>
+    <text x="830" y="165" text-anchor="middle" font-family="var(--font-mono)" font-size="11" font-weight="600" fill="var(--purple)">test-driven-dev</text>
+
+    <rect x="760" y="200" width="140" height="40" rx="8" fill="var(--red-light)" stroke="var(--red)" stroke-width="1.5"/>
+    <text x="830" y="225" text-anchor="middle" font-family="var(--font-mono)" font-size="11" font-weight="600" fill="var(--red)">systematic-debug</text>
+
+    <!-- Animated dots -->
+    <circle r="6" fill="var(--accent)" opacity="0.9">
+      <animate attributeName="cx" values="100;460" dur="2s" repeatCount="indefinite" keyTimes="0;0.35" keySplines="0.4 0 0.2 1" calcMode="spline"/>
+      <animate attributeName="cy" values="120;120" dur="2s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.9;0.9;0" dur="2s" repeatCount="indefinite" keyTimes="0;0.32;0.38"/>
+    </circle>
+    <circle r="5" fill="var(--green)" opacity="0">
+      <animate attributeName="cx" values="460;830" dur="3s" repeatCount="indefinite" begin="0.6s" keyTimes="0;0.2;1" keySplines="0.4 0 0.2 1;0.4 0 0.2 1" calcMode="spline"/>
+      <animate attributeName="cy" values="120;40" dur="3s" repeatCount="indefinite" begin="0.6s"/>
+      <animate attributeName="opacity" values="0;0.9;0.9;0" dur="3s" repeatCount="indefinite" begin="0.6s" keyTimes="0;0.05;0.7;1"/>
+    </circle>
+    <circle r="5" fill="var(--blue)" opacity="0">
+      <animate attributeName="cx" values="460;830" dur="3s" repeatCount="indefinite" begin="0.8s" keyTimes="0;0.2;1" keySplines="0.4 0 0.2 1;0.4 0 0.2 1" calcMode="spline"/>
+      <animate attributeName="cy" values="120;100" dur="3s" repeatCount="indefinite" begin="0.8s"/>
+      <animate attributeName="opacity" values="0;0.9;0.9;0" dur="3s" repeatCount="indefinite" begin="0.8s" keyTimes="0;0.05;0.7;1"/>
+    </circle>
+    <circle r="5" fill="var(--purple)" opacity="0">
+      <animate attributeName="cx" values="460;830" dur="3s" repeatCount="indefinite" begin="1s" keyTimes="0;0.2;1" keySplines="0.4 0 0.2 1;0.4 0 0.2 1" calcMode="spline"/>
+      <animate attributeName="cy" values="120;160" dur="3s" repeatCount="indefinite" begin="1s"/>
+      <animate attributeName="opacity" values="0;0.9;0.9;0" dur="3s" repeatCount="indefinite" begin="1s" keyTimes="0;0.05;0.7;1"/>
+    </circle>
+    <circle r="5" fill="var(--red)" opacity="0">
+      <animate attributeName="cx" values="460;830" dur="3s" repeatCount="indefinite" begin="1.2s" keyTimes="0;0.2;1" keySplines="0.4 0 0.2 1;0.4 0 0.2 1" calcMode="spline"/>
+      <animate attributeName="cy" values="120;220" dur="3s" repeatCount="indefinite" begin="1.2s"/>
+      <animate attributeName="opacity" values="0;0.9;0.9;0" dur="3s" repeatCount="indefinite" begin="1.2s" keyTimes="0;0.05;0.7;1"/>
+    </circle>
+
+    <!-- Labels -->
+    <text x="240" y="108" text-anchor="middle" font-family="var(--font-body)" font-size="10" fill="var(--text-3)">scan + context</text>
+    <text x="640" y="32" text-anchor="middle" font-family="var(--font-body)" font-size="10" fill="var(--text-3)">match → confirm</text>
+  </svg>
+</div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how" class="how-section page">
+  <h2 class="section-title">Three steps, zero config</h2>
+  <p class="section-sub">装好就生效。每次新对话自动分析、智能推荐。</p>
+  <div class="how-grid">
+    <div class="how-card">
+      <div class="how-num">01</div>
+      <h3>Understand</h3>
+      <p>扫描项目技术栈和目录结构，建立项目画像。每次对话开始时自动完成。</p>
+    </div>
+    <div class="how-card">
+      <div class="how-num">02</div>
+      <h3>Analyze & Match</h3>
+      <p>基于「项目上下文 + 你的需求」拆解任务，从所有已安装的 skill 中匹配最佳方案。</p>
+    </div>
+    <div class="how-card">
+      <div class="how-num">03</div>
+      <h3>Confirm & Execute</h3>
+      <p>弹出原生选择框，你确认后自动调用。复杂任务会按依赖顺序编排多个 skill。</p>
+    </div>
+  </div>
+</section>
+
+<!-- DEMO -->
+<section class="demo-section page">
+<div class="demo-box">
+  <div class="demo-header">
+    <div class="demo-dot"></div><div class="demo-dot"></div><div class="demo-dot"></div>
+    <span class="demo-title">live demo — user input: "做个好看的页面，写完要测试"</span>
+  </div>
+  <div class="demo-body">
+    <div class="demo-input">
+      🗣️ 做个好看的页面，写完要测试
+    </div>
+    <div class="demo-thinking">
+      <div class="label">🧠 Auto Selector Analysis</div>
+      <strong>需求分析：</strong>你需要设计前端页面并编写测试用例<br>
+      <strong>项目：</strong>my-app (React + TypeScript + Tailwind + Vitest)
+    </div>
+    <div style="font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:8px">📋 Recommended execution plan:</div>
+    <div class="demo-plan">
+      <div class="demo-step">
+        <span class="demo-step-num">1</span>
+        <span class="demo-step-name">frontend-design</span>
+        <span class="demo-step-desc">— 设计页面结构和样式</span>
+      </div>
+      <div class="demo-step">
+        <span class="demo-step-num">2</span>
+        <span class="demo-step-name">test-driven-development</span>
+        <span class="demo-step-desc">— 编写测试用例</span>
+      </div>
+    </div>
+    <div class="demo-options">
+      <div class="demo-opt primary">✅ 执行完整计划</div>
+      <div class="demo-opt">⚡ 只执行第一步</div>
+      <div class="demo-opt">✏️ 修改计划</div>
+      <div class="demo-opt">❌ 跳过，直接回答</div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- FEATURES -->
+<section id="features" class="features-section page">
+  <h2 class="section-title">What you get</h2>
+  <p class="section-sub">不只是关键词匹配，是真正理解你需求的智能路由。</p>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon amber">🔍</div>
+      <h3>Project-aware</h3>
+      <p>自动读取 package.json、技术栈、目录结构，推荐基于你的项目上下文。</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon blue">🧠</div>
+      <h3>Deep Analysis</h3>
+      <p>先理解需求、拆解子任务，再匹配 skill。不是关键词匹配，是语义理解。</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon purple">🔗</div>
+      <h3>Multi-skill Orchestration</h3>
+      <p>复杂需求自动识别多个 skill，按依赖关系排序，生成完整执行计划。</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon green">📋</div>
+      <h3>Native Form Selection</h3>
+      <p>使用 AskUserQuestion 弹出原生选择框，不是输入 1/2，所见即所得。</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon amber">🚫</div>
+      <h3>Blacklist</h3>
+      <p>永久排除特定 skill。聊天命令或 CLI 都能管理，一行搞定。</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon green">🪶</div>
+      <h3>Zero Overhead</h3>
+      <p>钩子脚本 &lt; 5ms。零配置激活，装好就生效，不需要改 CLAUDE.md。</p>
+    </div>
+  </div>
+</section>
+
+<!-- PLATFORMS -->
+<section class="platforms-section page">
+  <h2 class="section-title">Works everywhere</h2>
+  <p class="section-sub">一套核心逻辑，7 个平台自动激活。</p>
+  <div class="platform-grid">
+    <div class="platform-badge"><div class="platform-dot"></div>Claude Code</div>
+    <div class="platform-badge"><div class="platform-dot"></div>Codex CLI</div>
+    <div class="platform-badge"><div class="platform-dot"></div>Gemini CLI</div>
+    <div class="platform-badge"><div class="platform-dot"></div>Cursor</div>
+    <div class="platform-badge"><div class="platform-dot"></div>Windsurf</div>
+    <div class="platform-badge"><div class="platform-dot"></div>Cline</div>
+    <div class="platform-badge"><div class="platform-dot"></div>GitHub Copilot</div>
+  </div>
+</section>
+
+<!-- COMMANDS -->
+<section id="commands" class="commands-section page">
+  <h2 class="section-title">Commands</h2>
+  <p class="section-sub">聊天命令 + CLI，覆盖所有操作场景。</p>
+  <div class="cmd-grid">
+    <div class="cmd-card">
+      <h3>💬 聊天命令</h3>
+      <div class="cmd-list">
+        <div class="cmd-item"><code>直接说需求</code><span>自动分析并推荐 skill</span></div>
+        <div class="cmd-item"><code>auto-selector help</code><span>显示所有命令</span></div>
+        <div class="cmd-item"><code>auto-selector on/off</code><span>开启 / 关闭</span></div>
+        <div class="cmd-item"><code>auto-selector list</code><span>列出所有 skill</span></div>
+        <div class="cmd-item"><code>auto-selector scan</code><span>重新扫描项目</span></div>
+        <div class="cmd-item"><code>直接用</code><span>跳过确认模式</span></div>
+        <div class="cmd-item"><code>不要用 X</code><span>加入黑名单</span></div>
+      </div>
+    </div>
+    <div class="cmd-card">
+      <h3>🖥️ CLI 命令</h3>
+      <div class="cmd-list">
+        <div class="cmd-item"><code>npx auto-selector-skill</code><span>一键安装</span></div>
+        <div class="cmd-item"><code>--help</code><span>帮助信息</span></div>
+        <div class="cmd-item"><code>--list</code><span>检测到的 AI 助手</span></div>
+        <div class="cmd-item"><code>--only claude</code><span>只装到指定平台</span></div>
+        <div class="cmd-item"><code>--dry-run</code><span>预览，不写文件</span></div>
+        <div class="cmd-item"><code>--uninstall</code><span>卸载</span></div>
+        <div class="cmd-item"><code>--blacklist-*</code><span>黑名单管理</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="page">
+  <div class="footer-links">
+    <a href="https://github.com/ffdgdfhhhh/auto-selector-skill" target="_blank" rel="noopener">GitHub</a>
+    <a href="https://www.npmjs.com/package/auto-selector-skill" target="_blank" rel="noopener">npm</a>
+    <a href="https://github.com/ffdgdfhhhh/auto-selector-skill/blob/main/INSTALL.md" target="_blank" rel="noopener">Install Guide</a>
+    <a href="https://github.com/ffdgdfhhhh/auto-selector-skill/blob/main/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a>
+  </div>
+  <div class="footer-copy">MIT License · Built for the AI coding community</div>
+</footer>
+
+</body>
+</html>
