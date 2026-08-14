@@ -1,6 +1,7 @@
 {
   "name": "auto-selector-skill-mcp",
   "version": "1.0.0",
+  "type": "module",
   "description": "MCP server for auto-selector-skill — provides intelligent skill routing for any MCP-compatible AI assistant",
   "main": "index.js",
   "bin": {

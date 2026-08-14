@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.0.5 (2026-08-14)
+
+### Bug Fixes
+
+- **Hook 输出格式修复**: 改为 JSON 格式 (`hookSpecificOutput.additionalContext`)，和 superpowers 插件相同
+- **添加 EXTREMELY_IMPORTANT 标签**: 确保模型优先处理路由指令
+- **修复 Skill 匹配失败**: 之前纯文本输出被模型忽略，现在正确注入系统上下文
+
+### Features
+
+- **MCP 服务器**: 新增 `mcp-server/` 目录，提供 `scan_skills`、`match_skill`、`list_skills` 工具
+- **多平台 MCP 配置**: 自动配置 Cursor、Windsurf、VS Code 的 MCP 连接
+
 ## 1.1.0 (2026-08-13)
 
 ### Features
