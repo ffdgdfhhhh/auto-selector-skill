@@ -33,21 +33,12 @@ description: >
 
 **扫描一次，整个会话复用。不要每次都重新扫描。**
 
-1. Read the system-reminder for all installed skills/plugins
-2. Only include skills in the `Available user-invocable skills in this session:` section
-3. Build a compact lookup index:
-
-```
-| Skill Name | What It Does | Keywords |
-|---|---|---|
-| writing-plans | 帮用户做技术方案、拆解任务、规划实现路径 | 计划、规划、方案、拆解、plan |
-| frontend-design | 前端 UI 设计、组件布局、样式、主题 | UI、页面、设计、组件、布局、样式 |
-| test-driven-development | TDD 测试编写 | 测试、test、单测、TDD |
-| ... | ... | ... |
-```
-
-4. Store this index — reuse it for ALL subsequent messages in this conversation. Do NOT re-scan.
-5. If user says "重新扫描" / "rescan" → rebuild the index. Otherwise never re-scan.
+1. Read the system-reminder content that was injected into this conversation
+2. Find ALL skill/plugin listings — look for sections containing skill names, descriptions, and keywords. Skills may appear under various headings like "Available user-invocable skills", "Skills", "Plugins", or as individual skill blocks with `name:` and `description:` fields.
+3. For each skill found, extract: **name**, **description**, and derive **keywords** from the description
+4. Build a compact lookup index from the extracted information
+5. Store this index — reuse it for ALL subsequent messages in this conversation. Do NOT re-scan.
+6. If user says "重新扫描" / "rescan" → rebuild the index. Otherwise never re-scan.
 
 ---
 
