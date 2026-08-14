@@ -7,26 +7,38 @@
 ## 会话开始时
 
 1. 调用 MCP 工具 `scan_skills` 扫描项目中的所有可用 skill
-2. 如果没有 MCP 工具，手动扫描：package.json scripts、项目结构、配置文件、rules 目录
-3. 建立 skill 索引（名称 + 描述 + 触发关键词）
+2. 建立 skill 索引（名称 + 描述 + 触发关键词）
 
 ## 每次用户发消息时
 
 1. 分析用户意图，提取关键词
-2. 调用 MCP 工具 `match_skill` 或手动匹配：
-   - "做个计划" → planning/project-management 相关 skill
-   - "写测试" → testing 相关 skill
-   - "设计页面" → UI/frontend 相关 skill
-   - "部署/发布" → deployment 相关 skill
-3. **有匹配** → 用原生选择框确认：
-   - 问题: "推荐使用 [skill名] — {它能做什么}"
-   - 选项: ✅ 使用 / ❌ 不用
-4. **多个匹配** → 列出执行计划，问用户要不要全部执行
-5. **没有匹配** → 闭嘴，直接干活
+2. 调用 MCP 工具 `match_skill` 匹配用户请求
+3. **有匹配** → 向用户展示：
+   ```
+   推荐使用 [skill名] — {description}
+
+   1. ✅ 使用
+   2. ❌ 不用
+   ```
+   等待用户输入数字或文字，然后调用 `confirm_skill` 工具
+4. **没有匹配** → 闭嘴，直接干活
+
+## 确认流程
+
+```
+AI: 推荐使用 work-planner — 工作/学习/项目计划规划
+
+    1. ✅ 使用
+    2. ❌ 不用
+
+用户: 1
+
+AI: [调用 confirm_skill(skill_name="work-planner", user_choice="use")]
+```
 
 ## 规则
 
-- 优先使用 MCP 工具进行匹配，没有 MCP 时回退到手动扫描
+- 优先使用 MCP 工具进行匹配
 - 不过度分析，简单匹配就行
 - 没匹配到就直接干活，别说"没找到匹配的工具"
 - 用户拒绝后不道歉、不解释

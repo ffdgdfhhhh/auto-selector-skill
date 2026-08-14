@@ -232,6 +232,140 @@ server.registerTool(
   }
 );
 
+// Tool: ask_user (text-based confirmation for non-Claude Code platforms)
+server.registerTool(
+  "ask_user",
+  {
+    description:
+      "Ask the user to confirm before running a skill. Returns the user's choice. Use this after match_skill finds a relevant skill.",
+    inputSchema: {
+      skill_name: z.string().describe("Name of the recommended skill"),
+      skill_description: z.string().describe("What the skill does"),
+      options: z
+        .array(z.string())
+        .optional()
+        .describe("Custom options. Defaults to ['✅ 使用', '❌ 不用']"),
+    },
+  },
+  async ({ skill_name, skill_description, options }) => {
+    const opts = options || ["✅ 使用", "❌ 不用"];
+    const formatted = opts.map((o, i) => `${i + 1}. ${o}`).join("\n");
+
+    // Return the question — the AI platform will present it to the user
+    // and call this tool again with the user's answer
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify(
+            {
+              status: "ask",
+              question: `推荐使用 ${skill_name} — ${skill_description}`,
+              options: opts,
+              instruction: `请向用户展示以上选项，等待用户选择后调用 confirm_skill 工具传入用户的选择。`,
+            },
+            null,
+            2
+          ),
+        },
+      ],
+    };
+  }
+);
+
+// Tool: confirm_skill — execute after user confirms
+server.registerTool(
+  "confirm_skill",
+  {
+    description:
+      "Confirm and execute a skill. Call this after the user confirms they want to use a skill.",
+    inputSchema: {
+      skill_name: z.string().describe("Name of the skill to execute"),
+      user_choice: z
+        .string()
+        .describe("User's choice: 'use' to execute, 'skip' to skip"),
+    },
+  },
+  async ({ skill_name, user_choice }) => {
+    if (user_choice === "skip" || user_choice === "2") {
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              status: "skipped",
+              message: "用户跳过了 skill，直接回答。",
+            }),
+          },
+        ],
+      };
+    }
+
+    // Find the skill
+    const skill = skillIndex.find((s) => s.name === skill_name);
+    if (!skill) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              status: "error",
+              message: `Skill '${skill_name}' not found in index.`,
+            }),
+          },
+        ],
+      };
+    }
+
+    // For npm scripts, return the command to run
+    if (skill.type === "npm-script") {
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              status: "execute",
+              type: "npm-script",
+              command: skill.command,
+              message: `请执行命令: ${skill.command}`,
+            }),
+          },
+        ],
+      };
+    }
+
+    // For rule files, return the path to read
+    if (skill.type === "rule-file") {
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              status: "execute",
+              type: "rule-file",
+              path: skill.path,
+              message: `请读取规则文件: ${skill.path} 并按其中的指令执行。`,
+            }),
+          },
+        ],
+      };
+    }
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify({
+            status: "execute",
+            skill: skill,
+            message: `请执行 skill: ${skill_name}`,
+          }),
+        },
+      ],
+    };
+  }
+);
+
 // Start server
 const transport = new StdioServerTransport();
 await server.connect(transport);
