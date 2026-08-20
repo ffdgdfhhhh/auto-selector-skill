@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.4.0 (2026-08-20)
+
+### Two-Level Selection
+
+- **两级选择架构**: 第一级看大类摘要（13 个），第二级读详细文件选具体 skill
+- **按来源分组**: 130 个 skill 分为 13 个大类（HyperFrames, GSAP, UI/UX Design 等）
+- **详细文件按需读取**: AI 选定大类后，用 Read 工具读取 `~/.claude/auto-selector/categories/<name>.md`
+- **Token 消耗降低 97%**: 每次消息只注入 1,260 字符（之前 37,418 字符）
+- **更准确的路由**: AI 先看大方向，再深入细节，比一次性看 130 个 skill 准确得多
+
 ## 1.2.1 (2026-08-20)
 
 ### Revert to AI-driven matching

@@ -1,14 +1,15 @@
 #!/usr/bin/env node
 // auto-selector-skill — UserPromptSubmit hook
-// Read pre-built index, output categories for AI to judge
+// Remind AI of the two-step process and show category list
 
 const fs = require('fs');
 const path = require('path');
 
 const HOME = process.env.HOME || process.env.USERPROFILE;
-const INDEX_PATH = path.join(HOME, '.claude', 'auto-selector-index.json');
+const INDEX_DIR = path.join(HOME, '.claude', 'auto-selector');
+const INDEX_PATH = path.join(INDEX_DIR, 'index.json');
 
-// Read pre-built index
+// Read index
 let index = null;
 try {
   if (fs.existsSync(INDEX_PATH)) {
@@ -18,7 +19,6 @@ try {
   console.error(`[auto-selector] Error reading index: ${e.message}`);
 }
 
-// If no index, skip
 if (!index || !index.categories || index.categories.length === 0) {
   console.log(JSON.stringify({
     hookSpecificOutput: {
@@ -29,23 +29,23 @@ if (!index || !index.categories || index.categories.length === 0) {
   process.exit(0);
 }
 
-// Output category list for AI to make the decision
-const categoryList = index.categories.map(cat => {
-  const skillCount = cat.skills.length;
-  const skillNames = cat.skills.map(s => s.name).join(', ');
-  return `• ${cat.name} (${skillCount} skills: ${skillNames})`;
-}).join('\n');
+// Build brief category list
+const categoryList = index.categories.map(c =>
+  `• ${c.name} (${c.skillCount} skills) — ${c.description}`
+).join('\n');
 
 const context = `<AUTO_SELECTORRouting>
-用户消息需要分析是否匹配以下 skill category（共 ${index.categories.length} 个大类，${index.totalSkills} 个 skill）：
+**两级选择流程：**
+
+1. 从以下大类中选择匹配的一个：
 
 ${categoryList}
 
-请判断用户需求是否匹配某个 category。
-如果匹配 → 调用 AskUserQuestion 推荐该 category
-如果不匹配 → 正常回答
+2. 读取该大类的详细文件（路径：${INDEX_DIR}/categories/<文件名>.md）
+3. 从详细列表中选择最合适的 skill
+4. 调用 AskUserQuestion 推荐给用户
 
-匹配原则：按语义理解，不按关键词。
+如果无匹配 → 直接回答
 </AUTO_SELECTORRouting>`;
 
 console.log(JSON.stringify({
