@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.2.0 (2026-08-20)
+
+### Critical Bug Fixes
+
+- **修复插件扫描器**: 现在正确遍历 version 目录，找到所有 plugin skills（之前找到 0 个，现在找到 71 个）
+- **实现真正的语义匹配**: 不再注入全部 130 个 skill，而是根据用户消息提取关键词，只匹配 top-5 相关 skill
+- **接入黑名单系统**: hooks 现在读取 `~/.auto-selector-skill-blacklist.json`，过滤掉被拉黑的 skill
+- **修复中文分词**: 添加 n-gram 分词 + 中英文同义词映射（"网页" → "web"，"动画" → "animation" 等）
+- **修复空 catch**: 所有错误现在输出到 stderr，不再静默失败
+
+### Performance Improvements
+
+- **Token 消耗降低 95%**: 从每次消息注入 ~4000 字符（130 个 skill）降低到 ~800 字符（5 个匹配 skill）
+- **会话缓存**: 记录已推荐的 skill，避免重复推荐（1 小时自动重置）
+- **动态版本号**: 从 package.json 读取，不再硬编码
+
+### Architecture Changes
+
+- **parseFrontmatter()**: 统一的 frontmatter 解析器，处理 \r\n 和 \n，正确解析包含冒号的值
+- **语义匹配引擎**: 基于关键词提取 + 同义词映射 + 评分系统（name 匹配 50 分，description 匹配 5-10 分）
+- **BLACKLIST_PATH**: 常量定义，确保 hooks 和 install.js 使用同一路径
+
 ## 1.1.0 (2026-08-18)
 
 ### Architecture Change

@@ -7,6 +7,46 @@ const path = require('path');
 
 const HOME = process.env.HOME || process.env.USERPROFILE;
 const INDEX_PATH = path.join(HOME, '.claude', 'auto-selector-index.json');
+const BLACKLIST_PATH = path.join(HOME, '.auto-selector-skill-blacklist.json');
+
+// Parse YAML frontmatter from SKILL.md
+function parseFrontmatter(content) {
+  // Handle both \n and \r\n line endings
+  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+  if (!match) return null;
+
+  const result = {};
+  const lines = match[1].split(/\r?\n/);
+
+  for (const line of lines) {
+    const colonIdx = line.indexOf(':');
+    if (colonIdx === -1) continue;
+
+    const key = line.slice(0, colonIdx).trim();
+    // Take everything after first colon, trim quotes if present
+    let value = line.slice(colonIdx + 1).trim();
+    // Remove surrounding quotes
+    if ((value.startsWith('"') && value.endsWith('"')) ||
+        (value.startsWith("'") && value.endsWith("'"))) {
+      value = value.slice(1, -1);
+    }
+    result[key] = value;
+  }
+
+  return result;
+}
+
+// Read blacklist
+function readBlacklist() {
+  try {
+    if (fs.existsSync(BLACKLIST_PATH)) {
+      return JSON.parse(fs.readFileSync(BLACKLIST_PATH, 'utf8'));
+    }
+  } catch (e) {
+    console.error(`[auto-selector] Error reading blacklist: ${e.message}`);
+  }
+  return [];
+}
 
 // Scan installed plugins from Claude cache
 function scanInstalledPlugins() {
@@ -26,54 +66,68 @@ function scanInstalledPlugins() {
         const pluginPath = path.join(marketPath, pluginDir);
         if (!fs.statSync(pluginPath).isDirectory()) continue;
 
-        // Read plugin.json
-        const pluginJsonPath = path.join(pluginPath, '.claude-plugin', 'plugin.json');
-        if (fs.existsSync(pluginJsonPath)) {
-          try {
-            const pluginJson = JSON.parse(fs.readFileSync(pluginJsonPath, 'utf8'));
-            skills.push({
-              name: pluginJson.name || pluginDir,
-              description: pluginJson.description || '',
-              source: 'plugin',
-              marketplace: marketDir,
-            });
-          } catch (e) {}
-        }
+        // Iterate version directories (e.g., "latest", "1.0.0", "6.3.0")
+        const versionDirs = fs.readdirSync(pluginPath);
+        for (const versionDir of versionDirs) {
+          const versionPath = path.join(pluginPath, versionDir);
+          if (!fs.statSync(versionPath).isDirectory()) continue;
 
-        // Scan skills inside plugin
-        const skillsDir = path.join(pluginPath, 'skills');
-        if (fs.existsSync(skillsDir)) {
-          try {
-            const skillDirs = fs.readdirSync(skillsDir);
-            for (const skillDir of skillDirs) {
-              const skillPath = path.join(skillsDir, skillDir);
-              if (!fs.statSync(skillPath).isDirectory()) continue;
-
-              const skillMdPath = path.join(skillPath, 'SKILL.md');
-              if (fs.existsSync(skillMdPath)) {
-                try {
-                  const skillContent = fs.readFileSync(skillMdPath, 'utf8');
-                  const frontmatterMatch = skillContent.match(/^---\n([\s\S]*?)\n---/);
-                  if (frontmatterMatch) {
-                    const lines = frontmatterMatch[1].split('\n');
-                    const name = lines.find(l => l.startsWith('name:'))?.split(':').slice(1).join(':').trim() || skillDir;
-                    const desc = lines.find(l => l.startsWith('description:'))?.split(':').slice(1).join(':').trim() || '';
-                    skills.push({
-                      name: name,
-                      description: desc,
-                      source: 'skill',
-                      marketplace: marketDir,
-                      plugin: pluginDir,
-                    });
-                  }
-                } catch (e) {}
-              }
+          // Read plugin.json from version directory
+          const pluginJsonPath = path.join(versionPath, '.claude-plugin', 'plugin.json');
+          if (fs.existsSync(pluginJsonPath)) {
+            try {
+              const pluginJson = JSON.parse(fs.readFileSync(pluginJsonPath, 'utf8'));
+              skills.push({
+                name: pluginJson.name || pluginDir,
+                description: pluginJson.description || '',
+                source: 'plugin',
+                marketplace: marketDir,
+                version: versionDir,
+              });
+            } catch (e) {
+              console.error(`[auto-selector] Error reading ${pluginJsonPath}: ${e.message}`);
             }
-          } catch (e) {}
+          }
+
+          // Scan skills inside plugin version
+          const skillsDir = path.join(versionPath, 'skills');
+          if (fs.existsSync(skillsDir)) {
+            try {
+              const skillDirs = fs.readdirSync(skillsDir);
+              for (const skillDir of skillDirs) {
+                const skillPath = path.join(skillsDir, skillDir);
+                if (!fs.statSync(skillPath).isDirectory()) continue;
+
+                const skillMdPath = path.join(skillPath, 'SKILL.md');
+                if (fs.existsSync(skillMdPath)) {
+                  try {
+                    const skillContent = fs.readFileSync(skillMdPath, 'utf8');
+                    const parsed = parseFrontmatter(skillContent);
+                    if (parsed) {
+                      skills.push({
+                        name: parsed.name || skillDir,
+                        description: parsed.description || '',
+                        source: 'skill',
+                        marketplace: marketDir,
+                        plugin: pluginDir,
+                        version: versionDir,
+                      });
+                    }
+                  } catch (e) {
+                    console.error(`[auto-selector] Error reading ${skillMdPath}: ${e.message}`);
+                  }
+                }
+              }
+            } catch (e) {
+              console.error(`[auto-selector] Error scanning skills in ${versionPath}: ${e.message}`);
+            }
+          }
         }
       }
     }
-  } catch (e) {}
+  } catch (e) {
+    console.error(`[auto-selector] Error scanning plugins: ${e.message}`);
+  }
 
   return skills;
 }
@@ -91,26 +145,33 @@ function scanLocalSkills() {
       const skillPath = path.join(localSkillsDir, skillDir);
       if (!fs.statSync(skillPath).isDirectory()) continue;
 
-      const skillMdPath = path.join(skillPath, 'SKILL.md');
+      // Handle symlinks - resolve to actual path
+      let realPath = skillPath;
+      try {
+        realPath = fs.realpathSync(skillPath);
+      } catch (e) { /* use original path */ }
+
+      const skillMdPath = path.join(realPath, 'SKILL.md');
       if (fs.existsSync(skillMdPath)) {
         try {
           const skillContent = fs.readFileSync(skillMdPath, 'utf8');
-          const frontmatterMatch = skillContent.match(/^---\n([\s\S]*?)\n---/);
-          if (frontmatterMatch) {
-            const lines = frontmatterMatch[1].split('\n');
-            const name = lines.find(l => l.startsWith('name:'))?.split(':')[1]?.trim() || skillDir;
-            const desc = lines.find(l => l.startsWith('description:'))?.split(':').slice(1).join(':').trim() || '';
+          const parsed = parseFrontmatter(skillContent);
+          if (parsed) {
             skills.push({
-              name: name,
-              description: desc,
+              name: parsed.name || skillDir,
+              description: parsed.description || '',
               source: 'local-skill',
               path: skillPath,
             });
           }
-        } catch (e) {}
+        } catch (e) {
+          console.error(`[auto-selector] Error reading ${skillMdPath}: ${e.message}`);
+        }
       }
     }
-  } catch (e) {}
+  } catch (e) {
+    console.error(`[auto-selector] Error scanning local skills: ${e.message}`);
+  }
 
   return skills;
 }
@@ -132,22 +193,23 @@ function scanProjectSkills() {
       if (fs.existsSync(skillMdPath)) {
         try {
           const skillContent = fs.readFileSync(skillMdPath, 'utf8');
-          const frontmatterMatch = skillContent.match(/^---\n([\s\S]*?)\n---/);
-          if (frontmatterMatch) {
-            const lines = frontmatterMatch[1].split('\n');
-            const name = lines.find(l => l.startsWith('name:'))?.split(':')[1]?.trim() || skillDir;
-            const desc = lines.find(l => l.startsWith('description:'))?.split(':').slice(1).join(':').trim() || '';
+          const parsed = parseFrontmatter(skillContent);
+          if (parsed) {
             skills.push({
-              name: name,
-              description: desc,
+              name: parsed.name || skillDir,
+              description: parsed.description || '',
               source: 'project-skill',
               path: skillPath,
             });
           }
-        } catch (e) {}
+        } catch (e) {
+          console.error(`[auto-selector] Error reading ${skillMdPath}: ${e.message}`);
+        }
       }
     }
-  } catch (e) {}
+  } catch (e) {
+    console.error(`[auto-selector] Error scanning project skills: ${e.message}`);
+  }
 
   return skills;
 }
@@ -158,19 +220,35 @@ const localSkills = scanLocalSkills();
 const projectSkills = scanProjectSkills();
 const allSkills = [...installedPlugins, ...localSkills, ...projectSkills];
 
-// Deduplicate by name
+// Read blacklist and filter
+const blacklist = readBlacklist();
+const filteredSkills = blacklist.length > 0
+  ? allSkills.filter(s => !blacklist.includes(s.name))
+  : allSkills;
+
+// Deduplicate by name (keep first occurrence — plugin > local > project priority)
 const seen = new Set();
-const uniqueSkills = allSkills.filter(s => {
+const uniqueSkills = filteredSkills.filter(s => {
   if (seen.has(s.name)) return false;
   seen.add(s.name);
   return true;
 });
 
+// Read version from package.json dynamically
+let version = '1.1.0';
+try {
+  const pkgPath = path.join(__dirname, '..', '..', 'package.json');
+  if (fs.existsSync(pkgPath)) {
+    version = JSON.parse(fs.readFileSync(pkgPath, 'utf8')).version || version;
+  }
+} catch (e) { /* use default */ }
+
 // Save index
 const index = {
-  version: '1.1.0',
+  version,
   timestamp: new Date().toISOString(),
   totalSkills: uniqueSkills.length,
+  blacklisted: blacklist.length,
   skills: uniqueSkills,
 };
 
@@ -189,7 +267,7 @@ const skillList = uniqueSkills.map(s => {
 }).join('\n');
 
 const context = `<EXTREMELY_IMPORTANT>
-You have auto-selector-skill v1.1.0 active.
+You have auto-selector-skill v${version} active.
 
 **Below are ALL available skills/plugins in this session (${uniqueSkills.length} total):**
 
