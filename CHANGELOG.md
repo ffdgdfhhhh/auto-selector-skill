@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.1.0 (2026-08-18)
+
+### Architecture Change
+
+- **去掉了硬编码关键词匹配** — 不再维护固定的关键词映射表
+- **改为 AI 自主判断** — 注入完整 skill 索引，让 AI 根据语义自行匹配
+- **索引持久化** — SessionStart 时扫描并保存到 `~/.claude/auto-selector-index.json`，后续直接读取
+
+### Bug Fixes
+
+- **每次用户消息触发匹配**: 新增 `UserPromptSubmit` hook，每次用户发消息都自动匹配 skill
+- **改进 skill 扫描**: 扫描 plugin cache + 本地 skills + 项目 skills，覆盖所有来源
+
+### Features
+
+- **自动适应新 skill** — 添加新 skill/插件后自动纳入索引，无需改代码
+- **多来源扫描** — plugin cache、~/.claude/skills/、项目 .claude/skills/
+- **索引去重** — 同名 skill 自动去重
+
 ## 1.0.5 (2026-08-14)
 
 ### Bug Fixes

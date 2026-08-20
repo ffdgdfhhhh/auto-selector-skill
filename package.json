@@ -1,6 +1,6 @@
 {
   "name": "auto-selector-skill",
-  "version": "1.0.5",
+  "version": "1.1.0",
   "description": "Always-on skill & plugin selector for AI coding agents. Scans installed skills/plugins, analyzes user tasks, selects the best match, asks for confirmation before invoking.",
   "license": "MIT",
   "author": "ffdgdfhhhh",
@@ -40,6 +40,7 @@
     "GEMINI.md",
     "gemini-extension.json",
     "README.md",
+    "CHANGELOG.md",
     "LICENSE"
   ]
 }
