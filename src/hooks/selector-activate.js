@@ -214,7 +214,7 @@ function scanProjectSkills() {
   return skills;
 }
 
-// Build full index
+// Build full index with category grouping
 const installedPlugins = scanInstalledPlugins();
 const localSkills = scanLocalSkills();
 const projectSkills = scanProjectSkills();
@@ -226,16 +226,97 @@ const filteredSkills = blacklist.length > 0
   ? allSkills.filter(s => !blacklist.includes(s.name))
   : allSkills;
 
-// Deduplicate by name (keep first occurrence — plugin > local > project priority)
-const seen = new Set();
-const uniqueSkills = filteredSkills.filter(s => {
-  if (seen.has(s.name)) return false;
-  seen.add(s.name);
-  return true;
-});
+// Group by category (plugin or source)
+const categoryMap = new Map();
+const SPECIAL_CATEGORIES = {
+  'gsap-skills': 'GSAP',
+  'hyperframes': 'HyperFrames',
+  'playwright': 'Playwright',
+  'document-skills': 'Document Skills',
+  'example-skills': 'Example Skills',
+  'superpowers': 'Superpowers',
+  'superpowers-dev': 'Superpowers',
+  'ponytail': 'Ponytail',
+  'caveman': 'Caveman',
+  'planning-with-files': 'Planning with Files',
+  'andrej-karpathy-skills': 'Karpathy Guidelines',
+  'karpathy-skills': 'Karpathy Guidelines',
+  'taste-skill': 'Taste Skill',
+};
+
+// Categorize local skills by name patterns
+function categorizeLocalSkill(skillName) {
+  if (skillName.includes('hyperframes') || skillName.includes('motion') ||
+      skillName.includes('video') || skillName.includes('captions') ||
+      skillName.includes('slideshow') || skillName.includes('remotion') ||
+      skillName === 'media-use' || skillName === 'figma') {
+    return 'HyperFrames';
+  }
+  if (skillName.includes('gsap')) {
+    return 'GSAP';
+  }
+  if (skillName.includes('playwright')) {
+    return 'Playwright';
+  }
+  if (skillName.includes('design') || skillName.includes('ui') ||
+      skillName.includes('brand') || skillName.includes('imagegen') ||
+      skillName === 'slides' || skillName === 'image-to-code') {
+    return 'UI/UX Design';
+  }
+  if (skillName.includes('full-output')) {
+    return 'Code Generation';
+  }
+  return 'Other Local Skills';
+}
+
+for (const skill of filteredSkills) {
+  // Determine category name
+  let category = skill.plugin || skill.marketplace || skill.source;
+
+  // Apply special category mapping
+  if (SPECIAL_CATEGORIES[category]) {
+    category = SPECIAL_CATEGORIES[category];
+  } else if (SPECIAL_CATEGORIES[skill.marketplace]) {
+    category = SPECIAL_CATEGORIES[skill.marketplace];
+  } else if (SPECIAL_CATEGORIES[skill.plugin]) {
+    category = SPECIAL_CATEGORIES[skill.plugin];
+  }
+
+  // Further categorize local skills
+  if (category === 'local-skill') {
+    category = categorizeLocalSkill(skill.name);
+  }
+
+  // Skip duplicate categories (Document Skills vs Example Skills)
+  if (category === 'Example Skills' && categoryMap.has('Document Skills')) {
+    continue;
+  }
+
+  if (!categoryMap.has(category)) {
+    categoryMap.set(category, {
+      name: category,
+      skills: [],
+      source: skill.source,
+      marketplace: skill.marketplace,
+      plugin: skill.plugin,
+    });
+  }
+
+  // Avoid duplicate skill names within same category
+  const existingSkill = categoryMap.get(category).skills.find(s => s.name === skill.name);
+  if (!existingSkill) {
+    categoryMap.get(category).skills.push({
+      name: skill.name,
+      description: skill.description,
+    });
+  }
+}
+
+// Convert to array
+const categories = Array.from(categoryMap.values());
 
 // Read version from package.json dynamically
-let version = '1.1.0';
+let version = '1.2.1';
 try {
   const pkgPath = path.join(__dirname, '..', '..', 'package.json');
   if (fs.existsSync(pkgPath)) {
@@ -247,9 +328,10 @@ try {
 const index = {
   version,
   timestamp: new Date().toISOString(),
-  totalSkills: uniqueSkills.length,
+  totalCategories: categories.length,
+  totalSkills: filteredSkills.length,
   blacklisted: blacklist.length,
-  skills: uniqueSkills,
+  categories,
 };
 
 try {
@@ -259,44 +341,43 @@ try {
 }
 
 // Output context for Claude
-const skillList = uniqueSkills.map(s => {
-  const sourceTag = s.source === 'plugin' ? '[plugin]' :
-                    s.source === 'skill' ? '[skill]' :
-                    s.source === 'local-skill' ? '[local]' : '[project]';
-  return `• ${s.name} ${sourceTag} — ${s.description || '无描述'}`;
+const categoryList = categories.map(cat => {
+  const skillCount = cat.skills.length;
+  const skillNames = cat.skills.map(s => s.name).join(', ');
+  return `• ${cat.name} (${skillCount} skills: ${skillNames})`;
 }).join('\n');
 
 const context = `<EXTREMELY_IMPORTANT>
 You have auto-selector-skill v${version} active.
 
-**Below are ALL available skills/plugins in this session (${uniqueSkills.length} total):**
+**Below are ALL available skill categories in this session (${categories.length} categories, ${filteredSkills.length} total skills):**
 
-${skillList}
+${categoryList}
 
 **MANDATORY routing rules — Follow on EVERY user message:**
 
 1. Analyze the user's message intent
-2. Check if any skill above matches the user's need (by meaning, not exact keywords)
+2. Check if any CATEGORY above matches the user's need (by meaning, not exact keywords)
 3. If YES → call AskUserQuestion tool FIRST:
-   - question: "推荐使用 [skill名] — {description}"
+   - question: "推荐使用 [category名] — {包含的skill列表}"
    - header: "Skill"
    - options: [{"label": "✅ 使用", "description": "用这个skill帮你做"}, {"label": "❌ 不用", "description": "跳过，直接回答"}]
    - multiSelect: false
 4. If NO → respond normally
 
 **Matching examples:**
-- "帮我做个网页" → ui-ux-pro-max (UI design)
-- "重构代码" → code-simplifier, ponytail
-- "写测试" → superpowers
-- "做个计划" → planning-with-files
-- "做个视频" → hyperframes
-- "写文档" → document-skills
-- "简洁一点" → caveman
+- "帮我做个网页" → UI/UX 设计相关 categories
+- "重构代码" → 代码简化相关 categories
+- "写测试" → 测试相关 categories
+- "做个计划" → 项目规划相关 categories
+- "做个视频" → HyperFrames
+- "写文档" → Document Skills
+- "简洁一点" → Caveman
 
 **Rules:**
 - Match by MEANING, not keywords
 - 用户说"不用" → 不道歉，下次继续推荐
-- 复杂需求可推荐多个 skill
+- 复杂需求可推荐多个 categories
 - 匹配不确定时，优先推荐
 </EXTREMELY_IMPORTANT>`;
 
