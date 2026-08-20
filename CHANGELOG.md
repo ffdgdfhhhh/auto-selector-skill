@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.1 (2026-08-20)
+
+### Revert to AI-driven matching
+
+- **去掉关键词匹配**: 关键词匹配不准确，改回让 AI 自己读 skill 列表判断
+- **简化 selector-match.js**: 只注入完整 skill 列表，由 AI 模型自主判断是否匹配
+
 ## 1.2.0 (2026-08-20)
 
 ### Critical Bug Fixes
