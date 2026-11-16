@@ -5,14 +5,16 @@
 ## 报 Bug
 
 在 GitHub Issues 中提交，包含：
-- 你的操作系统和 Claude Code 版本
+
+- 你的操作系统、Node.js 版本和 Claude Code 版本
 - 复现步骤
 - 期望行为 vs 实际行为
-- `installed_plugins.json` 中的相关条目（脱敏）
+- `npm run doctor` 的输出（先脱敏路径）
 
 ## 提功能建议
 
 在 GitHub Issues 中提交，描述：
+
 - 你想要什么功能
 - 为什么需要它
 - 你设想的使用方式
@@ -22,24 +24,40 @@
 1. Fork 仓库
 2. 创建分支：`git checkout -b feature/my-feature`
 3. 改代码
-4. 测试：重启你的 AI 编码助手，确认钩子正常加载，路由逻辑符合预期
+4. 跑检查：
+
+```bash
+npm test
+npm run check
+npm run doctor
+```
+
 5. 提交 PR
 
 ### 代码规范
 
 - 钩子脚本（`src/hooks/`）必须 **silent-fail** — 任何文件系统错误都不能阻塞会话启动
-- 路由逻辑在 `SKILL.md` 中修改，这是唯一编辑源
-- 不要硬编码 skill/plugin 名称 — 路由表是动态扫描的
+- **规则只有一处来源**：`src/lib/rules.js`。`SKILL.md` / `AGENTS.md` 的规则段由 `npm run sync-docs` 生成，不要手改生成区
+- 不要硬编码 skill/plugin 名称 — 分类走动态扫描 + 用户 `config.json` 的 `categoryOverrides`
+- 任何进入模型上下文的 skill 名、描述、大类名、黑名单项都必须经过 `src/lib/sanitize.js`
+- 安装器只调用 Claude Code 官方插件命令，不复制文件、不覆盖其他 agent 的全局配置
 - 新功能先在 Issue 中讨论，避免白做
 
 ### 测试
 
-改完后手动测试：
-1. 重启你的 AI 编码助手
-2. 确认钩子输出 `AUTO-SELECTOR-SKILL ACTIVE`
-3. 发一条消息，确认路由/确认流程正常
-4. 说 `stop auto-selector`，确认关闭
-5. 说 `start auto-selector`，确认重新开启
+```bash
+npm test                       # 单元测试
+npm run check                  # 文档规则 + 版本一致性
+npm run check:pack             # npm 包内容检查
+npm run eval -- --check        # 评测用例集
+```
+
+MCP 相关改动额外跑：
+
+```bash
+cd mcp-server && npm install && cd ..
+npm run test:mcp
+```
 
 ## License
 

@@ -1,7 +1,7 @@
 {
   "name": "auto-selector-skill",
-  "version": "1.4.0",
-  "description": "Always-on skill & plugin selector for AI coding agents. Scans installed skills/plugins, analyzes user tasks, selects the best match, asks for confirmation before invoking.",
+  "version": "1.6.0",
+  "description": "Always-on skill & plugin selector for Claude Code. Scans installed skills/plugins, analyzes user tasks, selects the best match, asks for confirmation before invoking.",
   "license": "MIT",
   "author": "ffdgdfhhhh",
   "homepage": "https://github.com/ffdgdfhhhh/auto-selector-skill",
@@ -15,6 +15,15 @@
   "bin": {
     "auto-selector-skill": "./bin/install.js"
   },
+  "scripts": {
+    "test": "node scripts/test.js",
+    "check": "node scripts/sync-docs.js --check && node scripts/check-versions.js",
+    "check:pack": "node scripts/check-package.js",
+    "sync-docs": "node scripts/sync-docs.js",
+    "doctor": "node src/cli/doctor.js",
+    "eval": "node src/cli/eval.js",
+    "test:mcp": "node mcp-server/smoke.mjs"
+  },
   "engines": {
     "node": ">=18"
   },
@@ -24,23 +33,19 @@
     "skill",
     "router",
     "selector",
-    "codex",
-    "gemini-cli",
-    "cursor",
+    "mcp",
     "ai-agent"
   ],
   "files": [
+    ".claude-plugin/plugin.json",
+    ".claude-plugin/marketplace.json",
     "bin/",
     "src/",
-    "plugins/",
-    ".claude-plugin/",
-    ".github/",
-    ".codex/",
+    "skills/",
     "AGENTS.md",
-    "GEMINI.md",
-    "gemini-extension.json",
     "README.md",
     "CHANGELOG.md",
+    "INSTALL.md",
     "LICENSE"
   ]
 }

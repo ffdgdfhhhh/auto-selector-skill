@@ -1,9 +1,0 @@
-{
-  "servers": {
-    "auto-selector-skill": {
-      "command": "node",
-      "args": ["${workspaceFolder}/mcp-server/index.js"],
-      "env": {}
-    }
-  }
-}

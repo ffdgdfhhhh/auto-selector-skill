@@ -1,431 +1,234 @@
 #!/usr/bin/env node
-// auto-selector-skill — unified cross-platform installer
+// auto-selector-skill — installer for the official Claude Code marketplace.
 //
-// Detects installed AI coding agents and installs for all of them.
-// Usage: npx auto-selector-skill [--only <agent>] [--list] [--dry-run]
+// The plugin is distributed through the GitHub-hosted marketplace. This CLI
+// only delegates to `claude plugin ...`; it never copies files into the cache
+// or writes to other agents' global config/rule files.
 //
-// Pure stdlib, zero npm runtime deps.
+// Usage: npx auto-selector-skill [--dry-run] [--uninstall] [--list]
 
 'use strict';
 
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const child_process = require('child_process');
+const { spawnSync } = require('child_process');
 
-const PLUGIN_NAME = 'auto-selector-skill';
-const SKILL_DIR = 'plugins/auto-selector-skill/skills/auto-selector-skill';
+const PLUGIN = 'auto-selector-skill';
+const MARKETPLACE = 'auto-selector-skill';
+const REPO = 'ffdgdfhhhh/auto-selector-skill';
+const KEY = `${PLUGIN}@${MARKETPLACE}`;
+const SHELL = process.platform === 'win32'; // claude is a .cmd shim on Windows
 
-// ── Provider matrix ─────────────────────────────────────────────────────────
-// Each entry: how to detect the agent + how to install for it.
-const PROVIDERS = [
-  {
-    id: 'claude',
-    label: 'Claude Code',
-    detect: 'command:claude',
-    install(dest, sourceDir) {
-      const claudeDir = process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude');
-      const cacheDir = path.join(claudeDir, 'plugins', 'cache', PLUGIN_NAME, PLUGIN_NAME, 'latest');
-      copyDir(sourceDir, cacheDir, ['.claude-plugin', '.github', '.codex', 'plugins', 'src', 'AGENTS.md', 'GEMINI.md', 'gemini-extension.json', 'package.json', 'README.md']);
-      registerPlugin(claudeDir, cacheDir);
-      return cacheDir;
-    },
-  },
-  {
-    id: 'gemini',
-    label: 'Gemini CLI',
-    detect: 'command:gemini',
-    install(dest, sourceDir) {
-      // Gemini uses gemini-extension.json + GEMINI.md at project or config level
-      const geminiDir = path.join(os.homedir(), '.gemini');
-      mkdirp(geminiDir);
-      copyFile(path.join(sourceDir, 'GEMINI.md'), path.join(geminiDir, 'GEMINI.md'));
-      copyFile(path.join(sourceDir, 'gemini-extension.json'), path.join(geminiDir, 'gemini-extension.json'));
-      // Copy skill file
-      const skillDest = path.join(geminiDir, SKILL_DIR);
-      copyFile(path.join(sourceDir, SKILL_DIR, 'SKILL.md'), path.join(skillDest, 'SKILL.md'));
-      return geminiDir;
-    },
-  },
-  {
-    id: 'codex',
-    label: 'Codex CLI',
-    detect: 'command:codex',
-    install(dest, sourceDir) {
-      const codexDir = path.join(os.homedir(), '.codex');
-      mkdirp(codexDir);
-      copyFile(path.join(sourceDir, 'AGENTS.md'), path.join(codexDir, 'AGENTS.md'));
-      const skillDest = path.join(codexDir, SKILL_DIR);
-      copyFile(path.join(sourceDir, SKILL_DIR, 'SKILL.md'), path.join(skillDest, 'SKILL.md'));
-      return codexDir;
-    },
-  },
-  {
-    id: 'cursor',
-    label: 'Cursor',
-    detect: 'command:cursor||macapp:Cursor',
-    install(dest, sourceDir) {
-      // Cursor uses AGENTS.md at project level — copy to global rules dir
-      const rulesDir = path.join(os.homedir(), '.cursor', 'rules');
-      mkdirp(rulesDir);
-      copyFile(path.join(sourceDir, 'AGENTS.md'), path.join(rulesDir, 'auto-selector-skill.md'));
-      return rulesDir;
-    },
-  },
-  {
-    id: 'windsurf',
-    label: 'Windsurf',
-    detect: 'command:windsurf||macapp:Windsurf',
-    install(dest, sourceDir) {
-      const rulesDir = path.join(os.homedir(), '.windsurf', 'rules');
-      mkdirp(rulesDir);
-      copyFile(path.join(sourceDir, 'AGENTS.md'), path.join(rulesDir, 'auto-selector-skill.md'));
-      return rulesDir;
-    },
-  },
-  {
-    id: 'cline',
-    label: 'Cline',
-    detect: 'vscode-ext:cline',
-    install(dest, sourceDir) {
-      const rulesDir = path.join(os.homedir(), '.clinerules');
-      mkdirp(rulesDir);
-      copyFile(path.join(sourceDir, 'AGENTS.md'), path.join(rulesDir, 'auto-selector-skill.md'));
-      return rulesDir;
-    },
-  },
-  {
-    id: 'copilot',
-    label: 'GitHub Copilot',
-    detect: 'command:gh',
-    install(dest, sourceDir) {
-      // Copilot uses .github/copilot-instructions.md — this is per-repo, so we just note it
-      const copilotDir = path.join(os.homedir(), '.config', 'github-copilot');
-      mkdirp(copilotDir);
-      copyFile(path.join(sourceDir, 'AGENTS.md'), path.join(copilotDir, 'auto-selector-skill.md'));
-      return copilotDir;
-    },
-  },
-];
-
-// ── Detection helpers ────────────────────────────────────────────────────────
-function detect(spec) {
-  const parts = spec.split('||');
-  for (const part of parts) {
-    const [type, value] = part.trim().split(':');
-    if (type === 'command') {
-      try {
-        const cmd = process.platform === 'win32' ? `where ${value}` : `which ${value}`;
-        child_process.execSync(cmd, { stdio: 'ignore' });
-        return true;
-      } catch (e) { /* not found */ }
-    }
-    if (type === 'macapp') {
-      if (process.platform === 'darwin') {
-        const appPath = `/Applications/${value}.app`;
-        if (fs.existsSync(appPath)) return true;
-      }
-    }
-    if (type === 'vscode-ext') {
-      // Check VSCode extensions directory
-      const extDirs = [
-        path.join(os.homedir(), '.vscode', 'extensions'),
-        path.join(os.homedir(), '.cursor', 'extensions'),
-        path.join(os.homedir(), '.vscode-insiders', 'extensions'),
-      ];
-      for (const dir of extDirs) {
-        if (!fs.existsSync(dir)) continue;
-        try {
-          const entries = fs.readdirSync(dir);
-          if (entries.some(e => e.toLowerCase().includes(value.toLowerCase()))) return true;
-        } catch (e) { /* ignore */ }
-      }
-    }
-  }
-  return false;
+function buildCommands() {
+  return {
+    install: [
+      ['claude', ['plugin', 'marketplace', 'add', REPO]],
+      ['claude', ['plugin', 'install', KEY]],
+    ],
+    uninstall: [
+      ['claude', ['plugin', 'uninstall', KEY]],
+      ['claude', ['plugin', 'marketplace', 'remove', MARKETPLACE]],
+    ],
+  };
 }
 
-// ── File helpers ─────────────────────────────────────────────────────────────
-function mkdirp(dir) {
-  fs.mkdirSync(dir, { recursive: true });
+function run(command, args) {
+  return spawnSync(command, args, {
+    stdio: 'inherit',
+    encoding: 'utf8',
+    shell: SHELL,
+  });
 }
 
-function copyFile(src, dest) {
-  if (!fs.existsSync(src)) return;
-  mkdirp(path.dirname(dest));
-  fs.copyFileSync(src, dest);
+function hasClaude() {
+  const result = spawnSync('claude', ['--version'], {
+    stdio: 'pipe',
+    encoding: 'utf8',
+    shell: SHELL,
+  });
+  return result.status === 0;
 }
 
-function copyDir(src, dest, entries) {
-  mkdirp(dest);
-  for (const entry of entries) {
-    const srcPath = path.join(src, entry);
-    const destPath = path.join(dest, entry);
-    if (!fs.existsSync(srcPath)) continue;
-    const stat = fs.statSync(srcPath);
-    if (stat.isDirectory()) {
-      copyDirRecursive(srcPath, destPath);
-    } else {
-      copyFile(srcPath, destPath);
-    }
+function printCommands(commands) {
+  for (const [command, args] of commands) {
+    console.log(`  ${command} ${args.join(' ')}`);
   }
 }
 
-function copyDirRecursive(src, dest) {
-  mkdirp(dest);
-  for (const entry of fs.readdirSync(src)) {
-    const srcPath = path.join(src, entry);
-    const destPath = path.join(dest, entry);
-    const stat = fs.statSync(srcPath);
-    if (stat.isDirectory()) {
-      copyDirRecursive(srcPath, destPath);
-    } else {
-      copyFile(srcPath, destPath);
+function printFallback() {
+  console.error('   Install Claude Code first: https://claude.ai/code');
+  console.error('   Then run:');
+  printCommands(buildCommands().install);
+}
+
+function install() {
+  if (!hasClaude()) {
+    console.error('✘ Claude Code CLI not found.');
+    printFallback();
+    return 1;
+  }
+
+  for (const [command, args] of buildCommands().install) {
+    const result = run(command, args);
+    if (result.status !== 0) {
+      console.error(`✘ failed: ${command} ${args.join(' ')}`);
+      return result.status || 1;
     }
   }
+
+  console.log(`\n🎉 ${PLUGIN} installed. Restart Claude Code to activate.`);
+  return 0;
 }
 
-function registerPlugin(claudeDir, cacheDir) {
-  const pluginsJson = path.join(claudeDir, 'plugins', 'installed_plugins.json');
-  mkdirp(path.dirname(pluginsJson));
-
-  let data;
-  if (fs.existsSync(pluginsJson)) {
-    try { data = JSON.parse(fs.readFileSync(pluginsJson, 'utf8')); } catch (e) { data = { version: 2, plugins: {} }; }
-  } else {
-    data = { version: 2, plugins: {} };
+function uninstall() {
+  if (!hasClaude()) {
+    console.error('✘ Claude Code CLI not found.');
+    printFallback();
+    return 1;
   }
 
-  const key = `${PLUGIN_NAME}@${PLUGIN_NAME}`;
-  if (data.plugins[key]) return false;
-
-  data.plugins[key] = [{
-    scope: 'user',
-    installPath: cacheDir,
-    version: 'latest',
-    installedAt: new Date().toISOString(),
-    lastUpdated: new Date().toISOString(),
-  }];
-  fs.writeFileSync(pluginsJson, JSON.stringify(data, null, 2) + '\n');
-  return true;
-}
-
-// ── Argv ─────────────────────────────────────────────────────────────────────
-const args = process.argv.slice(2);
-const opts = {
-  only: [],
-  list: false,
-  dryRun: false,
-  help: false,
-  uninstall: false,
-  blacklistAdd: null,
-  blacklistRemove: null,
-  blacklistList: false,
-  blacklistClear: false,
-};
-
-for (let i = 0; i < args.length; i++) {
-  switch (args[i]) {
-    case '--only': opts.only.push(args[++i]); break;
-    case '--list': opts.list = true; break;
-    case '--dry-run': opts.dryRun = true; break;
-    case '-u': case '--uninstall': opts.uninstall = true; break;
-    case '--blacklist-add': opts.blacklistAdd = args[++i]; break;
-    case '--blacklist-remove': opts.blacklistRemove = args[++i]; break;
-    case '--blacklist-list': opts.blacklistList = true; break;
-    case '--blacklist-clear': opts.blacklistClear = true; break;
-    case '-h': case '--help': opts.help = true; break;
+  let failed = false;
+  for (const [command, args] of buildCommands().uninstall) {
+    const result = run(command, args);
+    if (result.status !== 0) failed = true;
   }
-}
 
-if (opts.help) {
-  console.log(`
-auto-selector-skill v${require('../package.json').version}
-
-Usage:
-  npx auto-selector-skill                        Install for all detected agents
-  npx auto-selector-skill --list                 List detected agents (no install)
-  npx auto-selector-skill --only <agent>         Install for specific agent only
-  npx auto-selector-skill --dry-run              Preview without writing files
-  npx auto-selector-skill --uninstall            Remove from all agents
-
-Blacklist management:
-  npx auto-selector-skill --blacklist-add <name>     Exclude a skill/plugin
-  npx auto-selector-skill --blacklist-remove <name>  Re-include a skill/plugin
-  npx auto-selector-skill --blacklist-list            Show current blacklist
-  npx auto-selector-skill --blacklist-clear           Clear blacklist
-
-Slash commands (in AI chat):
-  /auto-selector help              Show all commands
-  /auto-selector on|off            Enable/disable
-  /auto-selector list              List detected skills/plugins
-  /auto-selector skip-confirm on   Skip confirmation dialog
-  /auto-selector blacklist ...     Manage blacklist
-  /auto-selector status            Show current state
-
-Supported agents: ${PROVIDERS.map(p => p.id).join(', ')}
-`);
-  process.exit(0);
+  console.log(failed
+    ? '\n⚠️  Some removal steps reported an error (the plugin may not have been installed).'
+    : `\n🎉 ${PLUGIN} uninstalled. Restart Claude Code.`);
+  console.log('   Your blacklist file was kept: ~/.auto-selector-skill-blacklist.json');
+  return failed ? 1 : 0;
 }
 
 // ── Blacklist helpers ────────────────────────────────────────────────────────
 const BLACKLIST_FILE = path.join(os.homedir(), '.auto-selector-skill-blacklist.json');
 
 function readBlacklist() {
-  try { return JSON.parse(fs.readFileSync(BLACKLIST_FILE, 'utf8')); } catch (e) { return []; }
+  try {
+    const parsed = JSON.parse(fs.readFileSync(BLACKLIST_FILE, 'utf8'));
+    return Array.isArray(parsed) ? parsed.filter(x => typeof x === 'string') : [];
+  } catch (e) {
+    return [];
+  }
 }
 
 function writeBlacklist(list) {
-  fs.writeFileSync(BLACKLIST_FILE, JSON.stringify(list, null, 2) + '\n');
-}
-
-if (opts.blacklistList) {
-  const list = readBlacklist();
-  if (list.length === 0) {
-    console.log('📋 Blacklist is empty.');
-  } else {
-    console.log(`📋 Blacklist (${list.length}):`);
-    for (const name of list) console.log(`  🚫 ${name}`);
+  const seen = new Set();
+  const unique = [];
+  for (const item of list) {
+    const name = String(item || '').trim();
+    const key = name.toLowerCase();
+    if (!name || seen.has(key)) continue;
+    seen.add(key);
+    unique.push(name);
   }
-  process.exit(0);
+  fs.writeFileSync(BLACKLIST_FILE, JSON.stringify(unique, null, 2) + '\n');
 }
 
-if (opts.blacklistAdd) {
-  const list = readBlacklist();
-  if (list.includes(opts.blacklistAdd)) {
-    console.log(`⚠️  "${opts.blacklistAdd}" is already blacklisted.`);
-  } else {
-    list.push(opts.blacklistAdd);
-    writeBlacklist(list);
-    console.log(`🚫 Added "${opts.blacklistAdd}" to blacklist.`);
+function blacklistArgs(args) {
+  const value = flag => {
+    const i = args.indexOf(flag);
+    return i === -1 ? null : args[i + 1];
+  };
+
+  if (args.includes('--blacklist-list')) {
+    const list = readBlacklist();
+    console.log(list.length
+      ? `📋 Blacklist (${list.length}):\n${list.map(n => `  🚫 ${n}`).join('\n')}`
+      : '📋 Blacklist is empty.');
+    return 0;
   }
-  process.exit(0);
-}
 
-if (opts.blacklistRemove) {
-  const list = readBlacklist();
-  const idx = list.indexOf(opts.blacklistRemove);
-  if (idx === -1) {
-    console.log(`⚠️  "${opts.blacklistRemove}" is not in the blacklist.`);
-  } else {
-    list.splice(idx, 1);
-    writeBlacklist(list);
-    console.log(`✅ Removed "${opts.blacklistRemove}" from blacklist.`);
+  if (args.includes('--blacklist-clear')) {
+    writeBlacklist([]);
+    console.log('✅ Blacklist cleared.');
+    return 0;
   }
-  process.exit(0);
-}
 
-if (opts.blacklistClear) {
-  writeBlacklist([]);
-  console.log('✅ Blacklist cleared.');
-  process.exit(0);
-}
-
-// ── Uninstall ────────────────────────────────────────────────────────────────
-if (opts.uninstall) {
-  console.log(`🗑️  Uninstalling ${PLUGIN_NAME}...\n`);
-
-  for (const provider of PROVIDERS) {
-    try {
-      if (provider.id === 'claude') {
-        const claudeDir = process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude');
-        const cacheDir = path.join(claudeDir, 'plugins', 'cache', PLUGIN_NAME);
-        if (fs.existsSync(cacheDir)) {
-          fs.rmSync(cacheDir, { recursive: true, force: true });
-          console.log(`  ✅ ${provider.label} — removed plugin files`);
-        }
-        // Remove from installed_plugins.json
-        const pluginsJson = path.join(claudeDir, 'plugins', 'installed_plugins.json');
-        if (fs.existsSync(pluginsJson)) {
-          const data = JSON.parse(fs.readFileSync(pluginsJson, 'utf8'));
-          delete data.plugins[`${PLUGIN_NAME}@${PLUGIN_NAME}`];
-          fs.writeFileSync(pluginsJson, JSON.stringify(data, null, 2) + '\n');
-          console.log(`  ✅ ${provider.label} — unregistered from installed_plugins.json`);
-        }
-      }
-      // Other providers: remove installed files
-      if (provider.id === 'gemini') {
-        const f = path.join(os.homedir(), '.gemini', 'GEMINI.md');
-        if (fs.existsSync(f)) { fs.unlinkSync(f); console.log(`  ✅ ${provider.label} — removed GEMINI.md`); }
-      }
-      if (provider.id === 'codex') {
-        const f = path.join(os.homedir(), '.codex', 'AGENTS.md');
-        if (fs.existsSync(f)) { fs.unlinkSync(f); console.log(`  ✅ ${provider.label} — removed AGENTS.md`); }
-      }
-      if (provider.id === 'cursor') {
-        const f = path.join(os.homedir(), '.cursor', 'rules', 'auto-selector-skill.md');
-        if (fs.existsSync(f)) { fs.unlinkSync(f); console.log(`  ✅ ${provider.label} — removed rule file`); }
-      }
-      if (provider.id === 'windsurf') {
-        const f = path.join(os.homedir(), '.windsurf', 'rules', 'auto-selector-skill.md');
-        if (fs.existsSync(f)) { fs.unlinkSync(f); console.log(`  ✅ ${provider.label} — removed rule file`); }
-      }
-      if (provider.id === 'cline') {
-        const f = path.join(os.homedir(), '.clinerules', 'auto-selector-skill.md');
-        if (fs.existsSync(f)) { fs.unlinkSync(f); console.log(`  ✅ ${provider.label} — removed rule file`); }
-      }
-      if (provider.id === 'copilot') {
-        const f = path.join(os.homedir(), '.config', 'github-copilot', 'auto-selector-skill.md');
-        if (fs.existsSync(f)) { fs.unlinkSync(f); console.log(`  ✅ ${provider.label} — removed rule file`); }
-      }
-    } catch (e) {
-      console.log(`  ❌ ${provider.label} — ${e.message}`);
+  const add = value('--blacklist-add');
+  if (add) {
+    const list = readBlacklist();
+    if (list.some(n => n.toLowerCase() === add.toLowerCase())) {
+      console.log(`⚠️  "${add}" is already blacklisted.`);
+    } else {
+      writeBlacklist([...list, add]);
+      console.log(`🚫 Added "${add}" to blacklist.`);
     }
+    return 0;
   }
 
-  // Remove blacklist file
-  if (fs.existsSync(BLACKLIST_FILE)) {
-    fs.unlinkSync(BLACKLIST_FILE);
-    console.log(`  ✅ Blacklist file removed`);
+  const remove = value('--blacklist-remove');
+  if (remove) {
+    const list = readBlacklist();
+    const target = remove.toLowerCase();
+    if (!list.some(n => n.toLowerCase() === target)) {
+      console.log(`⚠️  "${remove}" is not in the blacklist.`);
+    } else {
+      writeBlacklist(list.filter(n => n.toLowerCase() !== target));
+      console.log(`✅ Removed "${remove}" from blacklist.`);
+    }
+    return 0;
   }
 
-  console.log(`\n🎉 ${PLUGIN_NAME} uninstalled. Restart your AI coding agent.`);
-  process.exit(0);
+  return null;
 }
 
-// ── Main ─────────────────────────────────────────────────────────────────────
-const sourceDir = path.join(__dirname, '..');
+function help() {
+  const pkg = require('../package.json');
+  console.log(`
+auto-selector-skill v${pkg.version}
 
-console.log(`🔍 Detecting installed AI coding agents...\n`);
+Official install (Claude Code):
+  claude plugin marketplace add ${REPO}
+  claude plugin install ${KEY}
 
-const detected = PROVIDERS.filter(p => detect(p.detect));
+This CLI is a wrapper around those two commands:
+  npx auto-selector-skill                  Install
+  npx auto-selector-skill --dry-run        Print commands without running
+  npx auto-selector-skill --uninstall      Remove plugin + marketplace
+  npx auto-selector-skill --list           Show detection status
 
-if (opts.list) {
-  for (const p of PROVIDERS) {
-    const status = detected.includes(p) ? '✅' : '  ';
-    console.log(`  ${status} ${p.label} (${p.id})`);
+Blacklist management (works without Claude Code):
+  npx auto-selector-skill --blacklist-add <name>
+  npx auto-selector-skill --blacklist-remove <name>
+  npx auto-selector-skill --blacklist-list
+  npx auto-selector-skill --blacklist-clear
+
+Docs: ${pkg.homepage}
+`);
+}
+
+function main(argv) {
+  if (argv.includes('-h') || argv.includes('--help')) {
+    help();
+    return 0;
   }
-  process.exit(0);
-}
 
-const targets = opts.only.length > 0
-  ? PROVIDERS.filter(p => opts.only.includes(p.id))
-  : detected;
+  const blacklist = blacklistArgs(argv);
+  if (blacklist !== null) return blacklist;
 
-if (targets.length === 0) {
-  console.log('❌ No supported AI coding agents detected.');
-  console.log('   Install one of: ' + PROVIDERS.map(p => p.label).join(', '));
-  console.log('   Or use --only <agent> to force install.');
-  process.exit(1);
-}
-
-console.log(`📦 Installing ${PLUGIN_NAME} for:\n`);
-
-for (const provider of targets) {
-  if (opts.dryRun) {
-    console.log(`  [dry-run] ${provider.label} — would install`);
-    continue;
+  if (argv.includes('--list')) {
+    console.log(`🔍 Claude Code CLI: ${hasClaude() ? 'found' : 'not found'}`);
+    console.log(`   marketplace: ${REPO}`);
+    console.log(`   plugin:      ${KEY}`);
+    return hasClaude() ? 0 : 1;
   }
-  try {
-    const dest = provider.install(null, sourceDir);
-    console.log(`  ✅ ${provider.label} → ${dest}`);
-  } catch (e) {
-    console.log(`  ❌ ${provider.label} — ${e.message}`);
+
+  if (argv.includes('--dry-run')) {
+    console.log('Would run:');
+    printCommands(argv.includes('--uninstall')
+      ? buildCommands().uninstall
+      : buildCommands().install);
+    return 0;
   }
+
+  if (argv.includes('-u') || argv.includes('--uninstall')) return uninstall();
+  return install();
 }
 
-if (!opts.dryRun) {
-  console.log(`\n🎉 ${PLUGIN_NAME} installed! Restart your AI coding agent to activate.`);
-} else {
-  console.log(`\n[dry-run] No files were written.`);
+if (require.main === module) {
+  process.exitCode = main(process.argv.slice(2));
 }
+
+module.exports = { buildCommands, REPO, KEY };

@@ -1,0 +1,317 @@
+[
+  {
+    "name": "auto-selector-skill",
+    "description": "Installed-skill router. Use when the user asks which installed skill fits a task, asks to recommend or choose a skill, or says \"auto selector\". Contains the routing rules (when to recommend, popup cop",
+    "category": "auto-selector-skill"
+  },
+  {
+    "name": "banner-design",
+    "description": "Design banners for social media, ads, website heroes, creative assets, and print. Multiple art direction options with AI-generated visuals. Actions: design, create, generate banner. Platforms: Faceboo",
+    "category": "UI/UX Design"
+  },
+  {
+    "name": "brand",
+    "description": "Brand voice, visual identity, messaging frameworks, asset management, brand consistency. Activate for branded content, tone of voice, marketing assets, brand compliance, style guides.",
+    "category": "UI/UX Design"
+  },
+  {
+    "name": "brandkit",
+    "description": "Premium brand-kit image generation skill for creating high-end brand-guidelines boards, logo systems, identity decks, and visual-world presentations. Trained for minimalist, cinematic, editorial, dark",
+    "category": "UI/UX Design"
+  },
+  {
+    "name": "captions-overlay",
+    "description": "Overlay doctrine for the embedded-captions workflow — the caption MODEL (drop / rail / embed) and the rule that captions are an OVERLAY composited on top of the film, never a reserved bottom band you ",
+    "category": "HyperFrames"
+  },
+  {
+    "name": "changelog-video",
+    "description": "Turn a weekly changelog .md into a finished branded changelog video (square 1080, ~45-60s, Annie VO, animated brand background, mock-UI visualizations, lowkey captions). Use when the user provides a c",
+    "category": "HyperFrames"
+  },
+  {
+    "name": "cut-the-curve",
+    "description": "The technique catalog: five velocity-matched SEAMS (zoom-through, INVERSE zoom-through, cut-the-curve, waterfall cut, rack-focus blur-cut) plus the two in-scene techniques — waterfall ENTRY (staggered",
+    "category": "Other Local Skills"
+  },
+  {
+    "name": "design",
+    "description": "Comprehensive design skill: brand identity, design tokens, UI styling, logo generation (55 styles, Gemini AI), corporate identity program (50 deliverables, CIP mockups), HTML presentations (Chart.js),",
+    "category": "UI/UX Design"
+  },
+  {
+    "name": "design-system",
+    "description": "Token architecture, component specifications, and slide generation. Three-layer tokens (primitive→semantic→component), CSS variables, spacing/typography scales, component specs, strategic slide creati",
+    "category": "UI/UX Design"
+  },
+  {
+    "name": "design-taste-frontend",
+    "description": "Anti-slop frontend skill for landing pages, portfolios, and redesigns. The agent reads the brief, infers the right design direction, and ships interfaces that do not look templated. Real design system",
+    "category": "UI/UX Design"
+  },
+  {
+    "name": "design-taste-frontend-v1",
+    "description": "The original v1 taste-skill, preserved for projects depending on its exact behavior. The current default is `design-taste-frontend` (v2 experimental), which is a substantial rewrite. Use this v1 insta",
+    "category": "UI/UX Design"
+  },
+  {
+    "name": "embedded-captions",
+    "description": "Add captions or subtitles to an existing single-subject talking-head video without editing the footage. Use for plain verbatim captions, cinematic captions embedded behind the subject, VFX captions, “",
+    "category": "HyperFrames"
+  },
+  {
+    "name": "faceless-explainer",
+    "description": "Turn arbitrary text — an article, notes, a topic, a brief — into a faceless explainer video: there is no site or footage to capture, so the visuals are invented per scene (typography, abstract graphic",
+    "category": "Other Local Skills"
+  },
+  {
+    "name": "figma",
+    "description": "Import Figma content into a HyperFrames composition — rendered assets, brand tokens, components, storyboard sections → reconstructed motion (frames read as states, not slides) (REST/CLI), connector-as",
+    "category": "HyperFrames"
+  },
+  {
+    "name": "frontend-slides",
+    "description": "Create stunning, animation-rich HTML presentations from scratch or by converting PowerPoint files. Use when the user wants to build a presentation, convert a PPT/PPTX to web, or create slides for a ta",
+    "category": "UI/UX Design"
+  },
+  {
+    "name": "full-output-enforcement",
+    "description": "Overrides default LLM truncation behavior. Enforces complete code generation, bans placeholder patterns, and handles token-limit splits cleanly. Apply to any task requiring exhaustive, unabridged outp",
+    "category": "Code Quality"
+  },
+  {
+    "name": "general-video",
+    "description": "Author or edit a custom HyperFrames composition when no specialized workflow fits, or when BRIEF.md sets flow: companion. Use for longer or multi-scene pieces, brand and sizzle reels, montages, static",
+    "category": "HyperFrames"
+  },
+  {
+    "name": "gpt-taste",
+    "description": "Elite UX/UI & Advanced GSAP Motion Engineer. Enforces Python-driven true randomization for layout variance, strict AIDA page structure, wide editorial typography (bans 6-line wraps), gapless bento gri",
+    "category": "Other Local Skills"
+  },
+  {
+    "name": "gsap-core",
+    "description": "Official GSAP skill for the core API — gsap.to(), from(), fromTo(), easing, duration, stagger, defaults, gsap.matchMedia() (responsive, prefers-reduced-motion). Use when the user asks for a JavaScript",
+    "category": "GSAP"
+  },
+  {
+    "name": "gsap-frameworks",
+    "description": "Official GSAP skill for Vue, Svelte, and other non-React frameworks — lifecycle, scoping selectors, cleanup on unmount. Use when the user wants animation in Vue, Nuxt, Svelte, SvelteKit, or asks about",
+    "category": "GSAP"
+  },
+  {
+    "name": "gsap-performance",
+    "description": "Official GSAP skill for performance — prefer transforms, avoid layout thrashing, will-change, batching. Use when optimizing GSAP animations, reducing jank, or when the user asks about animation perfor",
+    "category": "GSAP"
+  },
+  {
+    "name": "gsap-plugins",
+    "description": "Official GSAP skill for GSAP plugins — registration, ScrollToPlugin, ScrollSmoother, Flip, Draggable, Inertia, Observer, SplitText, ScrambleText, SVG and physics plugins, CustomEase, EasePack, CustomW",
+    "category": "GSAP"
+  },
+  {
+    "name": "gsap-react",
+    "description": "Official GSAP skill for React — useGSAP hook, refs, gsap.context(), cleanup. Use when the user wants animation in React or Next.js, or asks about GSAP with React, useGSAP, or cleanup on unmount. Recom",
+    "category": "GSAP"
+  },
+  {
+    "name": "gsap-scrolltrigger",
+    "description": "Official GSAP skill for ScrollTrigger — scroll-linked animations, pinning, scrub, triggers. Use when building or recommending scroll-based animation, parallax, pinned sections, or when the user asks a",
+    "category": "GSAP"
+  },
+  {
+    "name": "gsap-timeline",
+    "description": "Official GSAP skill for timelines — gsap.timeline(), position parameter, nesting, playback. Use when sequencing animations, choreographing keyframes, or when the user asks about animation sequencing, ",
+    "category": "GSAP"
+  },
+  {
+    "name": "gsap-utils",
+    "description": "Official GSAP skill for gsap.utils — clamp, mapRange, normalize, interpolate, random, snap, toArray, wrap, pipe. Use when the user asks about gsap.utils, clamp, mapRange, random, snap, toArray, wrap, ",
+    "category": "GSAP"
+  },
+  {
+    "name": "high-end-visual-design",
+    "description": "Teaches the AI to design like a high-end agency. Defines the exact fonts, spacing, shadows, card structures, and animations that make a website feel expensive. Blocks all the common defaults that make",
+    "category": "UI/UX Design"
+  },
+  {
+    "name": "hyperframes",
+    "description": "Mandatory entry point: read this first for any request to make, create, edit, animate, or render a video, animation, or motion graphic, including a promo, explainer, captioned clip, title card, overla",
+    "category": "HyperFrames"
+  },
+  {
+    "name": "hyperframes-animation",
+    "description": "All animation knowledge for HyperFrames — atomic motion rules, multi-phase scene blueprints, scene transitions, broader motion-design techniques, AND the seven runtime adapters (GSAP default, plus Lot",
+    "category": "HyperFrames"
+  },
+  {
+    "name": "hyperframes-audio",
+    "description": "Use when audio already placed in a HyperFrames composition needs to be mixed: a music bed that fights a voiceover (voiceover carve), effects on a track (EQ, compressor, limiter, gate, saturation, dela",
+    "category": "HyperFrames"
+  },
+  {
+    "name": "hyperframes-cli",
+    "description": "Use the HyperFrames CLI development loop: init, add, catalog, capture, lint, check, snapshot, compare, grade-compare, preview, play, present, beats, keyframes, single or batch render, publish, cloud, ",
+    "category": "HyperFrames"
+  },
+  {
+    "name": "hyperframes-core",
+    "description": "The HyperFrames composition contract — build one renderable project. Use for composition structure, the `data-*` timing attributes, `class=\"clip\"`, tracks, sub-compositions, variables, framework-owned",
+    "category": "HyperFrames"
+  },
+  {
+    "name": "hyperframes-creative",
+    "description": "Non-animation creative direction for HyperFrames videos. Use for design spec (frame.md / design.md) handling, palettes, typography, narration, beat planning, audio-reactive visuals, composition patter",
+    "category": "HyperFrames"
+  },
+  {
+    "name": "hyperframes-keyframes",
+    "description": "Use when a HyperFrames composition needs seek-safe 2D/3D keyframes, GSAP timelines, CSS keyframes, Anime.js, WAAPI, FLIP, paths, masks, SVG morph/draw, text trails, 3D depth, or `hyperframes keyframes",
+    "category": "HyperFrames"
+  },
+  {
+    "name": "hyperframes-registry",
+    "description": "Install, discover, and wire registry blocks and components into HyperFrames compositions. Use when running hyperframes add or hyperframes catalog, installing one item or every block matching a tag, wi",
+    "category": "HyperFrames"
+  },
+  {
+    "name": "image-to-code",
+    "description": "Elite website image-to-code skill for Codex. For visually important web tasks, it must first generate the design image(s) itself, deeply analyze them, then implement the website to match them as close",
+    "category": "UI/UX Design"
+  },
+  {
+    "name": "imagegen-frontend-mobile",
+    "description": "Elite mobile app image-generation skill for creating premium, app-native screen concepts and flows. Designed for iOS, Android, and cross-platform mobile products. Prioritizes clean hierarchy, comforta",
+    "category": "UI/UX Design"
+  },
+  {
+    "name": "imagegen-frontend-web",
+    "description": "Elite frontend image-direction skill for generating premium, conversion-aware website design references. CRITICAL OUTPUT RULE — generate ONE separate horizontal image FOR EVERY section. A landing page",
+    "category": "UI/UX Design"
+  },
+  {
+    "name": "img2threejs",
+    "description": "Turn an object or character reference image into a quality-gated, animation-ready procedural Three.js model built in code. Use for image-to-3D reconstruction, detail-accurate object rebuilds, stylized",
+    "category": "Other Local Skills"
+  },
+  {
+    "name": "industrial-brutalist-ui",
+    "description": "Raw mechanical interfaces fusing Swiss typographic print with military terminal aesthetics. Rigid grids, extreme type scale contrast, utilitarian color, analog degradation effects. For data-heavy dash",
+    "category": "UI/UX Design"
+  },
+  {
+    "name": "media-use",
+    "description": "Agent Media OS, the single skill for every media need in a HyperFrames project. Resolve BGM, SFX, image, icon, brand logo, voice, color grade, or LUT into a frozen local file or paste-ready block + le",
+    "category": "HyperFrames"
+  },
+  {
+    "name": "minimalist-ui",
+    "description": "Clean editorial-style interfaces. Warm monochrome palette, typographic contrast, flat bento grids, muted pastels. No gradients, no heavy shadows.",
+    "category": "UI/UX Design"
+  },
+  {
+    "name": "motion-doctrine",
+    "description": "GATEWAY — load FIRST before composing any HyperFrames animation or video. The high-level motion law that makes a multi-scene video feel like ONE continuous camera move instead of a stack of independen",
+    "category": "HyperFrames"
+  },
+  {
+    "name": "motion-graphics",
+    "description": "A short, design-led motion graphic where motion is the message — kinetic typography, stat count-up, chart/data-viz hit, logo sting / brand lockup, lower-third / callout / social overlay, animated map ",
+    "category": "HyperFrames"
+  },
+  {
+    "name": "music-to-video",
+    "description": "Turn a music track (an audio file, a video to pull audio from, or a track generated from a mood brief) into a beat-synced video — lyric video, slideshow, or kinetic promo. The music drives all pacing;",
+    "category": "HyperFrames"
+  },
+  {
+    "name": "oversized-cursor",
+    "description": "House-style oversized macOS cursor technique for HyperFrames launch videos. Load whenever a scene involves cursors or a pointer-led action, when kicking off a UI scene, when igniting a morph/transitio",
+    "category": "Other Local Skills"
+  },
+  {
+    "name": "playwright-dev",
+    "description": "Explains how to develop Playwright - add APIs, MCP tools, CLI commands, and vendor dependencies.",
+    "category": "Playwright"
+  },
+  {
+    "name": "playwright-devops",
+    "description": "DevOps workflows for Playwright - CI failure analysis, workflow debugging, and release operations.",
+    "category": "Playwright"
+  },
+  {
+    "name": "playwright-test-results",
+    "description": "Query Playwright CI test results from the aggregated DuckDB database. Answers questions about flaky tests, failure rates, slow tests, and per-run/SHA/PR results without hunting through GitHub artifact",
+    "category": "Playwright"
+  },
+  {
+    "name": "playwright-triage",
+    "description": "Triage a Playwright bug report by reproducing it from the information in the issue. Use when asked to triage, reproduce, or verify a GitHub issue (a new bug report, or an existing report with a new co",
+    "category": "Playwright"
+  },
+  {
+    "name": "ppt-master",
+    "description": "AI-driven presentation workflow for generating editable PPTX decks and slides, reconstructing page visuals, creating reusable Brand/Style/Layout/Deck workspaces, filling native PPTX templates, and enh",
+    "category": "Other Local Skills"
+  },
+  {
+    "name": "pr-to-video",
+    "description": "Turn a GitHub pull request (a PR URL, owner/repo#N, or 'this PR' in a checked-out repo) into a code-change explainer video — changelog, feature reveal, fix, or refactor walkthrough built from the diff",
+    "category": "HyperFrames"
+  },
+  {
+    "name": "product-launch-video",
+    "description": "Turn a product or marketing URL, pasted script, or brief into a product launch / promo video — SaaS promos, feature reveals, product demos, app and company launches. Use when the user wants to market,",
+    "category": "HyperFrames"
+  },
+  {
+    "name": "ralph",
+    "description": "Convert PRDs to prd.json format for the Ralph autonomous agent system. Use when you have an existing PRD and need to convert it to Ralph's JSON format. Triggers on: convert this prd, turn this into ra",
+    "category": "Other Local Skills"
+  },
+  {
+    "name": "redesign-existing-projects",
+    "description": "Upgrades existing websites and apps to premium quality. Audits current design, identifies generic AI patterns, and applies high-end design standards without breaking functionality. Works with any CSS ",
+    "category": "UI/UX Design"
+  },
+  {
+    "name": "remotion-to-hyperframes",
+    "description": "Port an existing Remotion (React) composition''s source to HyperFrames HTML. Use ONLY on an explicit ask to port/convert/migrate/translate a Remotion source — one-way, Remotion-only. A passing Remotio",
+    "category": "HyperFrames"
+  },
+  {
+    "name": "seam-craft",
+    "description": "Render-correctness doctrine for scene-to-scene seams in HyperFrames launch videos — the prerequisites that make transitions composite correctly on the master timeline. Load when assembling the master ",
+    "category": "Other Local Skills"
+  },
+  {
+    "name": "slides",
+    "description": "Create strategic HTML presentations with Chart.js, design tokens, responsive layouts, copywriting formulas, and contextual slide strategies.",
+    "category": "UI/UX Design"
+  },
+  {
+    "name": "slideshow",
+    "description": "Author a HyperFrames slideshow — a presentation, pitch deck, or interactive deck with discrete slides, fragment reveals, branching, hotspot navigation, and built-in presenter mode with speaker notes; ",
+    "category": "HyperFrames"
+  },
+  {
+    "name": "stitch-design-taste",
+    "description": "Semantic Design System Skill for Google Stitch. Generates agent-friendly DESIGN.md files that enforce premium, anti-generic UI standards — strict typography, calibrated color, asymmetric layouts, perp",
+    "category": "UI/UX Design"
+  },
+  {
+    "name": "talking-head-recut",
+    "description": "Package an existing talking-head / interview / podcast video with timed, designed GRAPHIC OVERLAY cards — kinetic titles, lower-thirds, data callouts, quotes, side panels, picture-in-picture — synced ",
+    "category": "Other Local Skills"
+  },
+  {
+    "name": "ui-styling",
+    "description": "Create beautiful, accessible user interfaces with shadcn/ui components (built on Radix UI + Tailwind), Tailwind CSS utility-first styling, and canvas-based visual designs. Use when building user inter",
+    "category": "UI/UX Design"
+  },
+  {
+    "name": "ui-ux-pro-max",
+    "description": "UI/UX design intelligence for web, mobile, and desktop. This skill should be used when designing, building, reviewing, or fixing interfaces, including pages, components, design systems, accessibility,",
+    "category": "UI/UX Design"
+  }
+]

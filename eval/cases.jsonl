@@ -1,0 +1,31 @@
+{"id":"video-promo","task":"做一个产品宣传视频","expected":["product-launch-video","hyperframes"],"category":"HyperFrames"}
+{"id":"video-explain","task":"把这篇长文章做成没有真人出镜的解说视频","expected":["faceless-explainer"],"category":"HyperFrames"}
+{"id":"video-captions","task":"给这段口播视频加字幕","expected":["embedded-captions","captions-overlay"],"category":"HyperFrames"}
+{"id":"video-music","task":"用一首歌做一个卡点视频","expected":["music-to-video","slideshow"],"category":"HyperFrames"}
+{"id":"video-pr","task":"把这个 GitHub PR 做成讲解视频","expected":["pr-to-video"],"category":"HyperFrames"}
+{"id":"video-transition","task":"两个镜头之间想要丝滑的转场效果","expected":["cut-the-curve","seam-craft","motion-doctrine"],"category":"HyperFrames"}
+{"id":"video-title","task":"做一个纯文字的动态标题开头","expected":["motion-graphics","hyperframes-animation"],"category":"HyperFrames"}
+{"id":"video-audio","task":"给视频里的背景音乐和旁白做混音","expected":["hyperframes-audio"],"category":"HyperFrames"}
+{"id":"video-figma","task":"把 Figma 里的设计稿导入视频项目","expected":["figma"],"category":"HyperFrames"}
+{"id":"video-remotion","task":"把现有的 Remotion 项目迁移过来","expected":["remotion-to-hyperframes"],"category":"HyperFrames"}
+{"id":"gsap-scroll","task":"做一个带滚动触发动画的落地页","expected":["gsap-scrolltrigger","gpt-taste"],"category":"GSAP"}
+{"id":"gsap-react","task":"React 组件里用 GSAP 做动画，注意清理","expected":["gsap-react"],"category":"GSAP"}
+{"id":"gsap-timeline","task":"编排一组按顺序播放的动画","expected":["gsap-timeline"],"category":"GSAP"}
+{"id":"gsap-performance","task":"GSAP 动画掉帧，怎么优化","expected":["gsap-performance"],"category":"GSAP"}
+{"id":"gsap-vue","task":"在 Vue 项目里使用 GSAP","expected":["gsap-frameworks"],"category":"GSAP"}
+{"id":"gsap-utils","task":"用 gsap.utils 做数值映射和随机","expected":["gsap-utils"],"category":"GSAP"}
+{"id":"design-banner","task":"设计一组社交媒体广告横幅","expected":["banner-design"],"category":"UI/UX Design"}
+{"id":"design-brand","task":"做一套品牌视觉识别系统","expected":["brand","brandkit","design-system"],"category":"UI/UX Design"}
+{"id":"design-ppt","task":"做一份产品发布会的 PPT","expected":["ppt-master"],"category":"Document Skills"}
+{"id":"design-slides","task":"把 PPT 转成网页幻灯片","expected":["frontend-slides","slides"],"category":"UI/UX Design"}
+{"id":"design-app","task":"生成移动端 App 的界面概念图","expected":["imagegen-frontend-mobile"],"category":"UI/UX Design"}
+{"id":"design-web-ref","task":"生成落地页的分段设计参考图","expected":["imagegen-frontend-web"],"category":"UI/UX Design"}
+{"id":"design-minimal","task":"做一个极简风格的高端官网","expected":["minimalist-ui","high-end-visual-design"],"category":"UI/UX Design"}
+{"id":"design-brutalist","task":"做一个工业风、像军事终端的数据仪表盘","expected":["industrial-brutalist-ui"],"category":"UI/UX Design"}
+{"id":"design-redesign","task":"重新设计一个现有的网站","expected":["redesign-existing-projects","design-taste-frontend"],"category":"UI/UX Design"}
+{"id":"design-mobile","task":"设计一个移动端 UI，要符合 iOS 风格","expected":["ui-ux-pro-max","ui-styling"],"category":"UI/UX Design"}
+{"id":"pw-debug","task":"调试一个失败的 Playwright 测试","expected":["playwright-triage","playwright-dev"],"category":"Playwright"}
+{"id":"pw-ci","task":"分析 Playwright CI 里反复失败的用例","expected":["playwright-devops","playwright-test-results"],"category":"Playwright"}
+{"id":"pw-results","task":"查一下最近的 Playwright 测试通过率","expected":["playwright-test-results"],"category":"Playwright"}
+{"id":"img-3d","task":"把这张参考图做成可动画的 Three.js 模型","expected":["img2threejs"],"category":"Other Local Skills"}
+{"id":"out-full","task":"生成完整代码，不要省略任何部分","expected":["full-output-enforcement"],"category":"Code Quality"}

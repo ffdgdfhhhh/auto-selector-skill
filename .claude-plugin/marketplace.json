@@ -1,0 +1,18 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "auto-selector-skill",
+  "description": "Always-on skill & plugin selector for Claude Code. Scans installed skills/plugins, matches the user's task, and asks before invoking.",
+  "owner": {
+    "name": "ffdgdfhhhh",
+    "url": "https://github.com/ffdgdfhhhh"
+  },
+  "plugins": [
+    {
+      "name": "auto-selector-skill",
+      "version": "1.6.0",
+      "description": "Always-on skill & plugin selector for Claude Code.",
+      "source": "./",
+      "category": "productivity"
+    }
+  ]
+}
