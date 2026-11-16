@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [18, 20, 22]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Syntax check
+        run: |
+          node --check src/hooks/selector-activate.js
+          node --check src/hooks/selector-match.js
+          node --check src/hooks/blacklist.js
+          node --check src/lib/scan.js
+          node --check src/lib/rules.js
+          node --check src/lib/sanitize.js
+          node --check src/lib/match.js
+          node --check src/cli/doctor.js
+          node --check src/cli/eval.js
+          node --check scripts/sync-docs.js
+          node --check scripts/check-versions.js
+          node --check scripts/check-package.js
+          node --check scripts/test.js
+          node --check bin/install.js
+          node --check mcp-server/index.js
+
+      - name: Tests
+        run: npm test
+
+      - name: Generated docs and versions are in sync
+        run: npm run check
+
+      - name: Eval case set
+        run: node src/cli/eval.js --check --allow-missing
+
+      - name: Routing benchmark (fixture threshold)
+        run: >
+          node src/cli/eval.js --baseline
+          --fixture eval/fixtures/skills.json
+          --min-top1 0.60 --min-top3 0.85
+
+      - name: Package contents
+        run: npm run check:pack
+
+      - name: MCP smoke test
+        if: matrix.node == 20
+        run: |
+          cd mcp-server
+          npm install --no-audit --no-fund
+          node smoke.mjs
